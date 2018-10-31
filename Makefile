@@ -1,7 +1,16 @@
-CXX := g++
-CXXFLAGS := -std=c++17 -O0 -Wall -Wextra -Wpedantic -Werror
+CXX ?= g++
+CXXFLAGS += -std=c++17 -O0 -Wall -Wextra -Wpedantic -Werror
 
-.PHONY: all
+.PHONY: all debug clean run
 
-all:
-	$(CXX) $(CXXFLAGS) -c list.hpp -o build/list.o
+all: clean
+	$(CXX) $(CXXFLAGS) main.cpp list.hpp -o build/main
+
+debug:
+	CXXFLAGS=-g make
+
+clean:
+	rm -f build/*
+
+run: all
+	build/main

@@ -3,6 +3,7 @@
 
 #include <cstdlib>
 #include <utility>
+#include <optional>
 
 #include "list_node.hpp"
 #include "list_iterator.hpp"
@@ -22,9 +23,13 @@ public:
     void push_back(T val);
     void insert(std::size_t index, T val);
 
-    T get_front() const;
-    T get_last() const;
-    T get(std::size_t index) const;
+    T&& pop_front();
+    T&& pop_back();
+    void remove(std::size_t index);
+
+    std::optional<T&> get_front() const;
+    std::optional<T&> get_last() const;
+    std::optional<T&> get(std::size_t index) const;
 
     std::size_t length() const;
     bool empty() const;
@@ -38,7 +43,7 @@ private:
 
 template<class T>
 list<T>::list(): m_length(0) {
-    m_sentinel = new list_node(T());
+    m_sentinel = new list_node<T>();
 }
 
 template<class T>
@@ -105,6 +110,36 @@ void list<T>::push_back(T val) {
     }
 
     m_length++;
+}
+
+template<class T>
+std::optional<T&> value_of(list_node<T>* node) {
+    return (node != nullptr) ?
+        std::make_optional(node->value) :
+        std::nullopt;
+}
+
+template<class T>
+std::optional<T&> list<T>::get_front() const {
+    return value_of(m_sentinel->next);
+}
+
+template<class T>
+std::optional<T&> list<T>::get_last() const {
+    return value_of(m_sentinel->prev);
+}
+
+template<class T>
+std::optional<T&> list<T>::get(std::size_t index) const {
+    auto current = m_sentinel->next;
+    std::size_t i = 0;
+
+    while (current != nullptr && i < index) {
+        current = current->next;
+        i++;
+    }
+
+    return value_of(current);
 }
 
 template<class T>

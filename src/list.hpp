@@ -35,7 +35,7 @@ public:
     bool empty() const;
 
 private:
-    std::optional< list_node<T>* > node_at(std::size_t index) const;
+    list_node<T>* node_at(std::size_t index) const;
     void insert_empty(T val);
     void insert_middle(T val, std::size_t index);
 
@@ -72,6 +72,7 @@ typename list<T>::iterator list<T>::end() {
 
 template<class T>
 void list<T>::insert_empty(T val) {
+    // insert into an empty list
     auto node = new list_node(val);
 
     m_sentinel->next = node;
@@ -115,25 +116,27 @@ void list<T>::push_back(T val) {
 }
 
 template<class T>
-std::optional< list_node<T>* > node_from_offset(std::size_t index, list_node<T>* start) {
-    if (start == nullptr) {
-        return std::nullopt;
-    } else if (index == 0) {
-        return std::make_optional(start);
+list_node<T>* node_from_offset(std::size_t offset, list_node<T>* current) {
+    // gets node a certain distance from the starting node, if it exists
+
+    while (current != nullptr && offset != 0) {
+        current = current->next;
+        offset--;
     }
 
-    return node_from_offset(index-1, start->next);
+    return current;
 }
 
 template<class T>
-std::optional< list_node<T>* > list<T>::node_at(std::size_t index) const {
+list_node<T>* list<T>::node_at(std::size_t index) const {
     return node_from_offset(index, m_sentinel->next);
 }
 
 template<class T>
 void list<T>::insert_middle(T val, std::size_t index) {
+    // insert at a place other than the front or back
     auto new_node = new list_node(val);
-    auto target = *node_at(index);
+    auto target = node_at(index);
     auto prev = target->prev;
 
     prev->next = new_node;
@@ -167,10 +170,12 @@ std::optional<T> pop(list_node<T>* node) {
         return std::nullopt;
     }
 
+    // if node isn't null, it's guaranteed to have connections due to sentinel
     auto node_before = node->prev;
     auto node_after = node->next;
     auto value = value_of(node);
 
+    // isolate target node and rewire surrounding nodes
     node->next = nullptr;
     node_before->next = node_after;
     node_after->prev = node_before;
@@ -191,7 +196,7 @@ std::optional<T> list<T>::pop_back() {
 
 template<class T>
 void list<T>::remove(std::size_t index) {
-    pop( node_at(index).value_or(nullptr) );
+    pop(node_at(index));
 }
 
 template<class T>
@@ -206,7 +211,7 @@ std::optional<T> list<T>::get_back() const {
 
 template<class T>
 std::optional<T> list<T>::get(std::size_t index) const {
-    return value_of( node_at(index).value_or(nullptr) );
+    return value_of(node_at(index));
 }
 
 template<class T>

@@ -27,9 +27,9 @@ public:
     T&& pop_back();
     void remove(std::size_t index);
 
-    std::optional<T&> get_front() const;
-    std::optional<T&> get_last() const;
-    std::optional<T&> get(std::size_t index) const;
+    std::optional<T> get_front() const;
+    std::optional<T> get_last() const;
+    std::optional<T> get(std::size_t index) const;
 
     std::size_t length() const;
     bool empty() const;
@@ -113,24 +113,24 @@ void list<T>::push_back(T val) {
 }
 
 template<class T>
-std::optional<T&> value_of(list_node<T>* node) {
+std::optional<T> value_of(list_node<T>* node) {
     return (node != nullptr) ?
         std::make_optional(node->value) :
         std::nullopt;
 }
 
 template<class T>
-std::optional<T&> list<T>::get_front() const {
+std::optional<T> list<T>::get_front() const {
     return value_of(m_sentinel->next);
 }
 
 template<class T>
-std::optional<T&> list<T>::get_last() const {
+std::optional<T> list<T>::get_last() const {
     return value_of(m_sentinel->prev);
 }
 
 template<class T>
-std::optional<T&> list<T>::get(std::size_t index) const {
+std::optional<T> list<T>::get(std::size_t index) const {
     auto current = m_sentinel->next;
     std::size_t i = 0;
 

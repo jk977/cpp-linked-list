@@ -28,13 +28,13 @@ BOOST_AUTO_TEST_CASE(push) {
     list<int> l;
 
     l.push_front(1);
-    BOOST_TEST( l.get_front().value_or(0) == 1 );
+    BOOST_TEST( *l.get_front() == 1 );
 
     l.push_back(2);
-    BOOST_TEST( l.get_front().value_or(0) == 1 );
+    BOOST_TEST( *l.get_front() == 1 );
 
     l.push_front(3);
-    BOOST_TEST( l.get_front().value_or(0) == 3 );
+    BOOST_TEST( *l.get_front() == 3 );
 
     std::size_t length = l.length();
 
@@ -57,4 +57,24 @@ BOOST_AUTO_TEST_CASE(foreach) {
         BOOST_TEST( index == n );
         index++;
     }
+}
+
+BOOST_AUTO_TEST_CASE(insert) {
+    list<int> l;
+
+    for (int i = 0; i < 10; i++) {
+        l.push_front(i);
+    }
+
+    l.insert(10, 0);
+    BOOST_TEST( *l.get_front() == 10 );
+
+    l.insert(11, l.length());
+    BOOST_TEST( *l.get_back() == 11 );
+
+    l.insert(3, 3);
+    BOOST_TEST( *l.get(3) == 3 );
+
+    l.insert(6, 8);
+    BOOST_TEST( *l.get(8) == 6 );
 }

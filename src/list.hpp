@@ -8,6 +8,8 @@
 #include "list_node.hpp"
 #include "list_iterator.hpp"
 
+#define MAX(x,y) ((x > y) ? x : y)
+
 template<class T>
 class list {
 public:
@@ -198,6 +200,7 @@ std::optional<T> list<T>::pop_back() {
 
 template<class T>
 std::optional<T> list<T>::pop(std::size_t index) {
+    m_length = MAX(0, m_length-1);  // prevent negative length when empty
     return pop_node(node_at(index));
 }
 

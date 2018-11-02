@@ -67,28 +67,34 @@ BOOST_AUTO_TEST_CASE(insert) {
     }
 
     l.insert(10, 0);
-    BOOST_TEST( *l.get_front() == 10 );
+    BOOST_TEST( l[0] == 10 );
 
     l.insert(11, l.length());
     BOOST_TEST( *l.get_back() == 11 );
 
     l.insert(3, 3);
-    BOOST_TEST( *l.get(3) == 3 );
+    BOOST_TEST( l[3] == 3 );
 
     l.insert(6, 8);
-    BOOST_TEST( *l.get(8) == 6 );
+    BOOST_TEST( l[8] == 6 );
 }
 
 BOOST_AUTO_TEST_CASE(get) {
     list<int> l;
 
+    BOOST_TEST( !l.get(10).has_value() );
+    BOOST_TEST( !l.get_front().has_value() );
+    BOOST_TEST( !l.get_back().has_value() );
+
     for (int i = 0; i < 100; i++) {
         l.push_back(i);
         BOOST_TEST( *l.get(i) == i );
+        BOOST_TEST( l[i] == i );
     }
 
     BOOST_TEST( *l.get_front() == 0 );
     BOOST_TEST( *l.get_back() == 99 );
+    BOOST_TEST( !l.get(999).has_value() );
 }
 
 BOOST_AUTO_TEST_CASE(pop) {

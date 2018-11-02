@@ -36,6 +36,8 @@ public:
     std::size_t length() const;
     bool empty() const;
 
+    T& operator[](std::size_t index);
+
 private:
     list_node<T>* node_at(std::size_t index) const;
     void insert_empty(T val);
@@ -227,6 +229,15 @@ std::size_t list<T>::length() const {
 template<class T>
 bool list<T>::empty() const {
     return length() == 0;
+}
+
+template<class T>
+T& list<T>::operator[](std::size_t index) {
+    if (index >= length()) {
+        throw std::out_of_range("Index is greater than the list length.");
+    }
+
+    return node_at(index)->value;
 }
 
 #endif // LIST_HPP_

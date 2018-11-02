@@ -25,7 +25,7 @@ public:
 
     std::optional<T> pop_front();
     std::optional<T> pop_back();
-    void remove(std::size_t index);
+    std::optional<T> pop(std::size_t index);
 
     std::optional<T> get_front() const;
     std::optional<T> get_back() const;
@@ -144,6 +144,8 @@ void list<T>::insert_middle(T val, std::size_t index) {
 
     new_node->next = target;
     target->prev = new_node;
+
+    m_length++;
 }
 
 template<class T>
@@ -165,7 +167,7 @@ std::optional<T> value_of(list_node<T>* node) {
 }
 
 template<class T>
-std::optional<T> pop(list_node<T>* node) {
+std::optional<T> pop_node(list_node<T>* node) {
     if (node == nullptr) {
         return std::nullopt;
     }
@@ -186,27 +188,27 @@ std::optional<T> pop(list_node<T>* node) {
 
 template<class T>
 std::optional<T> list<T>::pop_front() {
-    return pop(m_sentinel->next);
+    return pop(0);
 }
 
 template<class T>
 std::optional<T> list<T>::pop_back() {
-    return pop(m_sentinel->prev);
+    return pop(length() - 1);
 }
 
 template<class T>
-void list<T>::remove(std::size_t index) {
-    pop(node_at(index));
+std::optional<T> list<T>::pop(std::size_t index) {
+    return pop_node(node_at(index));
 }
 
 template<class T>
 std::optional<T> list<T>::get_front() const {
-    return value_of(m_sentinel->next);
+    return get(0);
 }
 
 template<class T>
 std::optional<T> list<T>::get_back() const {
-    return value_of(m_sentinel->prev);
+    return get(length() - 1);
 }
 
 template<class T>

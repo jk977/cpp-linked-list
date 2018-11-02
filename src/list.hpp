@@ -49,18 +49,16 @@ private:
 
 template<class T>
 list<T>::list(): m_length(0) {
-    m_sentinel = new list_node<T>();
+    auto node = new list_node<T>();
+    node->next = node;
+    node->prev = node;
+
+    m_sentinel = node;
 }
 
 template<class T>
 list<T>::~list() {
-    auto& tail = m_sentinel->prev;
-
-    if (tail != nullptr) {
-        // sever tail from sentinel to prevent double free
-        tail->next = nullptr;
-    }
-
+    m_sentinel->prev->next = nullptr;
     delete m_sentinel;
 }
 
@@ -120,20 +118,18 @@ void list<T>::push_back(T val) {
 }
 
 template<class T>
-list_node<T>* node_from_offset(std::size_t offset, list_node<T>* current) {
-    // gets node a certain distance from the starting node, if it exists
+list_node<T>* list<T>::node_at(std::size_t index) const {
+    auto current = m_sentinel->next;
+    std::size_t i = 0;
 
-    while (current != nullptr && offset != 0) {
+    while (current != m_sentinel && i < index) {
         current = current->next;
-        offset--;
+        i++;
     }
 
-    return current;
-}
-
-template<class T>
-list_node<T>* list<T>::node_at(std::size_t index) const {
-    return node_from_offset(index, m_sentinel->next);
+    return (current != m_sentinel) ?
+        current :
+        nullptr;
 }
 
 template<class T>

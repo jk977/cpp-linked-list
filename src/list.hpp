@@ -54,6 +54,7 @@ private:
 
 template<class T>
 list<T>::list(): m_length(0) {
+    // list is cyclical -- all nodes will always have a next and a prev
     auto node = new list_node<T>();
     node->next = node;
     node->prev = node;
@@ -69,12 +70,12 @@ list<T>::~list() {
 
 template<class T>
 typename list<T>::iterator list<T>::begin() {
-    return list<T>::iterator(m_sentinel->next, m_sentinel);
+    return list<T>::iterator(m_sentinel->next);
 }
 
 template<class T>
 typename list<T>::iterator list<T>::end() {
-    return list<T>::iterator(m_sentinel, m_sentinel);
+    return list<T>::iterator(m_sentinel);
 }
 
 template<class T>
@@ -85,8 +86,8 @@ typename list<T>::reverse_iterator list<T>::rbegin() {
 template<class T>
 typename list<T>::reverse_iterator list<T>::rend() {
     // since adding after reaching end() always returns end(),
-    // rend() isn't as simple as returning end()+1
-    auto iter = list<T>::iterator(m_sentinel->next, m_sentinel);
+    // rend() isn't as simple as returning ++end()
+    auto iter = list<T>::iterator(m_sentinel->next);
     return std::reverse_iterator(iter);
 }
 
@@ -140,6 +141,8 @@ list_node<T>* list<T>::node_at(std::size_t index) const {
     auto current = m_sentinel->next;
     std::size_t i = 0;
 
+    // check against sentinel to prevent wrapping around to the beginning
+    // when index > length()
     while (current != m_sentinel && i < index) {
         current = current->next;
         i++;

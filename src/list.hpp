@@ -63,18 +63,18 @@ list<T>::list(): m_length(0) {
 
 template<class T>
 list<T>::~list() {
-    m_sentinel->prev->next = nullptr;
+    m_sentinel->prev->next = nullptr; // prevent double free on sentinel
     delete m_sentinel;
 }
 
 template<class T>
 typename list<T>::iterator list<T>::begin() {
-    return list<T>::iterator(m_sentinel->next);
+    return list<T>::iterator(m_sentinel->next, m_sentinel);
 }
 
 template<class T>
 typename list<T>::iterator list<T>::end() {
-    return list<T>::iterator(m_sentinel);
+    return list<T>::iterator(m_sentinel, m_sentinel);
 }
 
 template<class T>
@@ -84,7 +84,10 @@ typename list<T>::reverse_iterator list<T>::rbegin() {
 
 template<class T>
 typename list<T>::reverse_iterator list<T>::rend() {
-    return std::reverse_iterator(end() + 1);
+    // since adding after reaching end() always returns end(),
+    // rend() isn't as simple as returning end()+1
+    auto iter = list<T>::iterator(m_sentinel->next, m_sentinel);
+    return std::reverse_iterator(iter);
 }
 
 template<class T>

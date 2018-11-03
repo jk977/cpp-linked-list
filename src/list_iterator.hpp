@@ -19,17 +19,20 @@ struct list_iterator {
 
     list_iterator<T>& operator++();
     list_iterator<T> operator++(int);
+    list_iterator<T>& operator+=(std::size_t offset);
     list_iterator<T> operator+(std::size_t offset) const;
 
     list_iterator<T>& operator--();
     list_iterator<T> operator--(int);
+    list_iterator<T>& operator-=(std::size_t offset);
     list_iterator<T> operator-(std::size_t offset) const;
 
     T& operator*();
+    T* operator->();
 
 private:
     list_node<T>* m_current;
-    list_node<T>* m_sentinel;
+    list_node<T>* m_sentinel; // track sentinel to prevent wrapping around
 };
 
 template<class T>
@@ -57,16 +60,23 @@ list_iterator<T>& list_iterator<T>::operator++() {
 template<class T>
 list_iterator<T> list_iterator<T>::operator++(int) {
     auto old = *this;
-    m_current = m_current->next;
+    ++*this;
     return old;
+}
+
+template<class T>
+list_iterator<T>& list_iterator<T>::operator+=(std::size_t offset) {
+    *this = *this + offset;
+    return *this;
 }
 
 template<class T>
 list_iterator<T> list_iterator<T>::operator+(std::size_t offset) const {
     auto result = m_current;
 
-    while (result != m_sentinel && offset-- > 0) {
+    while (result != m_sentinel && offset > 0) {
         result = result->next;
+        offset--;
     }
 
     return list_iterator(result, m_sentinel);
@@ -81,16 +91,23 @@ list_iterator<T>& list_iterator<T>::operator--() {
 template<class T>
 list_iterator<T> list_iterator<T>::operator--(int) {
     auto old = *this;
-    m_current = m_current->prev;
+    --*this;
     return old;
+}
+
+template<class T>
+list_iterator<T>& list_iterator<T>::operator-=(std::size_t offset) {
+    *this = *this - offset;
+    return *this;
 }
 
 template<class T>
 list_iterator<T> list_iterator<T>::operator-(std::size_t offset) const {
     auto result = m_current;
 
-    while (result != m_sentinel && offset-- > 0) {
+    while (result != m_sentinel && offset > 0) {
         result = result->prev;
+        offset--;
     }
 
     return list_iterator(result, m_sentinel);
@@ -99,6 +116,11 @@ list_iterator<T> list_iterator<T>::operator-(std::size_t offset) const {
 template<class T>
 T& list_iterator<T>::operator*() {
     return m_current->value;
+}
+
+template<class T>
+T* list_iterator<T>::operator->() {
+    return &**this;
 }
 
 #endif // LIST_ITERATOR_HPP_

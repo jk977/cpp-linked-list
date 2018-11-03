@@ -13,4 +13,4 @@ clean:
 	rm -f bin/*
 
 run: all
-	bin/list
+	bin/list; true

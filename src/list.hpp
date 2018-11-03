@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <utility>
 #include <optional>
+#include <iterator>
 
 #include "list_node.hpp"
 #include "list_iterator.hpp"
@@ -17,9 +18,13 @@ public:
     ~list();
 
     using iterator = list_iterator<T>;
+    using reverse_iterator = std::reverse_iterator<list_iterator<T>>;
 
     iterator begin();
     iterator end();
+
+    reverse_iterator rbegin();
+    reverse_iterator rend();
 
     void push_front(T val);
     void push_back(T val);
@@ -70,6 +75,16 @@ typename list<T>::iterator list<T>::begin() {
 template<class T>
 typename list<T>::iterator list<T>::end() {
     return list<T>::iterator(m_sentinel);
+}
+
+template<class T>
+typename list<T>::reverse_iterator list<T>::rbegin() {
+    return std::reverse_iterator(end());
+}
+
+template<class T>
+typename list<T>::reverse_iterator list<T>::rend() {
+    return std::reverse_iterator(end() + 1);
 }
 
 template<class T>

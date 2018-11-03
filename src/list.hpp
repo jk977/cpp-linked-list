@@ -64,12 +64,12 @@ list<T>::~list() {
 
 template<class T>
 typename list<T>::iterator list<T>::begin() {
-    return list_iterator(m_sentinel->next);
+    return list<T>::iterator(m_sentinel->next);
 }
 
 template<class T>
 typename list<T>::iterator list<T>::end() {
-    return list_iterator(m_sentinel);
+    return list<T>::iterator(m_sentinel);
 }
 
 template<class T>

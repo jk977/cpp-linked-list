@@ -6,78 +6,49 @@
 
 template<class T>
 struct list_iterator {
-    list_iterator(list_node<T>* initial);
-
     using iterator_category = std::bidirectional_iterator_tag;
     using value_type = T;
     using difference_type = std::ptrdiff_t;
     using pointer = T*;
     using reference = T&;
 
-    bool operator==(list_iterator<T> const& rhs);
-    bool operator!=(list_iterator<T> const& rhs);
+    list_iterator(list_node<value_type>* initial): m_current(initial) {}
 
-    list_iterator<T>& operator++();
-    list_iterator<T> operator++(int);
+    reference operator*() { return m_current->value; }
+    pointer operator->() { return &**this; }
 
-    list_iterator<T>& operator--();
-    list_iterator<T> operator--(int);
+    bool operator==(list_iterator<value_type> const& rhs) {
+        return m_current == rhs.m_current;
+    }
 
-    T& operator*();
-    T* operator->();
+    bool operator!=(list_iterator<value_type> const& rhs) {
+        return !(*this == rhs);
+    }
+
+    list_iterator<value_type>& operator++() {
+        m_current = m_current->next;
+        return *this;
+    }
+
+    list_iterator<value_type> operator++(int) {
+        auto old = *this;
+        ++*this;
+        return old;
+    }
+
+    list_iterator<value_type>& operator--() {
+        m_current = m_current->prev;
+        return *this;
+    }
+
+    list_iterator<value_type> operator--(int) {
+        auto old = *this;
+        --*this;
+        return old;
+    }
 
 private:
-    list_node<T>* m_current;
+    list_node<value_type>* m_current;
 };
-
-template<class T>
-list_iterator<T>::list_iterator(list_node<T>* initial): m_current(initial)
-{}
-
-template<class T>
-bool list_iterator<T>::operator==(list_iterator<T> const& rhs) {
-    return m_current == rhs.m_current;
-}
-
-template<class T>
-bool list_iterator<T>::operator!=(list_iterator<T> const& rhs) {
-    return !(*this == rhs);
-}
-
-template<class T>
-list_iterator<T>& list_iterator<T>::operator++() {
-    m_current = m_current->next;
-    return *this;
-}
-
-template<class T>
-list_iterator<T> list_iterator<T>::operator++(int) {
-    auto old = *this;
-    ++*this;
-    return old;
-}
-
-template<class T>
-list_iterator<T>& list_iterator<T>::operator--() {
-    m_current = m_current->prev;
-    return *this;
-}
-
-template<class T>
-list_iterator<T> list_iterator<T>::operator--(int) {
-    auto old = *this;
-    --*this;
-    return old;
-}
-
-template<class T>
-T& list_iterator<T>::operator*() {
-    return m_current->value;
-}
-
-template<class T>
-T* list_iterator<T>::operator->() {
-    return &**this;
-}
 
 #endif // LIST_ITERATOR_HPP_

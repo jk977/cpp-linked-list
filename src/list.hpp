@@ -142,13 +142,14 @@ list_node<T>* list<T>::node_at(std::size_t index) const {
     auto current = m_sentinel->next;
     std::size_t i = 0;
 
-    // check against sentinel to prevent wrapping around to the beginning
+    // stop at sentinel to prevent wrapping around to the beginning
     // when index > length()
     while (current != m_sentinel && i < index) {
         current = current->next;
         i++;
     }
 
+    // return nullptr instead of sentinel if index was out of bounds
     return (current != m_sentinel) ?
         current :
         nullptr;
@@ -190,6 +191,8 @@ std::optional<T> value_of(list_node<T>* node) {
 
 template<class T>
 std::optional<T> pop_node(list_node<T>* node) {
+    // remove given node from surrounding nodes and return its value
+
     if (node == nullptr) {
         return std::nullopt;
     }
@@ -220,16 +223,16 @@ std::optional<T> list<T>::pop_back() {
 
 template<class T>
 std::optional<T> list<T>::pop(std::size_t index) {
-    m_length = MAX(0, m_length-1);  // prevent negative length when empty
+    m_length = MAX(0, m_length-1);  // decrement length but prevent negative length when empty
     return pop_node(node_at(index));
 }
 
 template<class T>
 void list<T>::clear() {
-    // resets list to initial state (m_length == 0)
+    // resets list to initial state (length() == 0)
 
     if (length() > 0) {
-        m_sentinel->prev->next = nullptr;
+        m_sentinel->prev->next = nullptr; // break cycle to prevent double free
         delete m_sentinel->next;
 
         m_sentinel->next = nullptr;

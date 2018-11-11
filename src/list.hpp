@@ -83,15 +83,12 @@ typename list<T>::iterator list<T>::end() {
 
 template<class T>
 typename list<T>::reverse_iterator list<T>::rbegin() {
-    return std::reverse_iterator(end());
+    return reverse_iterator(end());
 }
 
 template<class T>
 typename list<T>::reverse_iterator list<T>::rend() {
-    // since adding after reaching end() always returns end(),
-    // rend() isn't as simple as returning ++end()
-    auto iter = iterator(m_sentinel->next);
-    return std::reverse_iterator(iter);
+    return reverse_iterator(m_sentinel->next);
 }
 
 template<class T>
@@ -182,35 +179,6 @@ void list<T>::insert(T val, std::size_t index) {
     } else {
         insert_middle(val, index);
     }
-}
-
-template<class T>
-std::optional<T> value_of(list_node<T>* node) {
-    return (node != nullptr) ?
-        std::make_optional(node->value) :
-        std::nullopt;
-}
-
-template<class T>
-std::optional<T> pop_node(list_node<T>* node) {
-    // remove given node from surrounding nodes and return its value
-
-    if (node == nullptr) {
-        return std::nullopt;
-    }
-
-    // if node isn't null, it's guaranteed to have connections due to sentinel
-    auto node_before = node->prev;
-    auto node_after = node->next;
-    auto value = value_of(node);
-
-    // isolate target node and rewire surrounding nodes
-    node->next = nullptr;
-    node_before->next = node_after;
-    node_after->prev = node_before;
-    delete node;
-
-    return value;
 }
 
 template<class T>

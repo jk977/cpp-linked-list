@@ -71,12 +71,12 @@ list<T>::~list() {
 
 template<class T>
 typename list<T>::iterator list<T>::begin() {
-    return list<T>::iterator(m_sentinel->next);
+    return iterator(m_sentinel->next);
 }
 
 template<class T>
 typename list<T>::iterator list<T>::end() {
-    return list<T>::iterator(m_sentinel);
+    return iterator(m_sentinel);
 }
 
 template<class T>
@@ -88,7 +88,7 @@ template<class T>
 typename list<T>::reverse_iterator list<T>::rend() {
     // since adding after reaching end() always returns end(),
     // rend() isn't as simple as returning ++end()
-    auto iter = list<T>::iterator(m_sentinel->next);
+    auto iter = iterator(m_sentinel->next);
     return std::reverse_iterator(iter);
 }
 

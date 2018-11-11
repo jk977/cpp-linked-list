@@ -11,6 +11,8 @@
 
 #define MAX(x,y) ((x > y) ? x : y)
 
+namespace dsa {
+
 template<class T>
 class list {
 public:
@@ -273,6 +275,8 @@ T& list<T>::operator[](std::size_t index) {
     }
 
     return node_at(index)->value;
+}
+
 }
 
 #endif // LIST_HPP_

@@ -1,6 +1,8 @@
 #ifndef LIST_NODE_HPP_
 #define LIST_NODE_HPP_
 
+namespace dsa {
+
 template<class T>
 struct list_node {
     list_node() = default;
@@ -11,5 +13,7 @@ struct list_node {
     list_node<T>* prev;
     list_node<T>* next;
 };
+
+}
 
 #endif // LIST_NODE_HPP_

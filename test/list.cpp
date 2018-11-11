@@ -3,6 +3,8 @@
 
 #include "../src/list.hpp"
 
+using dsa::list;
+
 BOOST_AUTO_TEST_CASE(length) {
     list<int> l;
 

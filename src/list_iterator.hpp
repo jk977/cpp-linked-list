@@ -4,6 +4,8 @@
 #include <iterator>
 #include "list_node.hpp"
 
+namespace dsa {
+
 template<class T>
 struct list_iterator {
     using iterator_category = std::bidirectional_iterator_tag;
@@ -50,5 +52,7 @@ struct list_iterator {
 private:
     list_node<value_type>* m_current;
 };
+
+}
 
 #endif // LIST_ITERATOR_HPP_

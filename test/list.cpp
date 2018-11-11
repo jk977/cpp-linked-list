@@ -140,13 +140,13 @@ BOOST_AUTO_TEST_CASE(iterators) {
 
     for (auto n : l) {
         BOOST_TEST( index == n );
-        index++;
+        ++index;
     }
 
     BOOST_TEST( index == 100 );
 
     for (auto iter = l.rbegin(); iter != l.rend(); ++iter) {
-        index--;
+        --index;
         BOOST_TEST( index == *iter );
     }
 

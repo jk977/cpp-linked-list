@@ -33,7 +33,6 @@ public:
     std::optional<T> pop_front();
     std::optional<T> pop_back();
     std::optional<T> pop(std::size_t index);
-    void clear();
 
     std::optional<T> get_front() const;
     std::optional<T> get_back() const;
@@ -41,6 +40,7 @@ public:
 
     std::size_t length() const;
     bool empty() const;
+    void clear();
 
     T& operator[](std::size_t index);
 
@@ -226,6 +226,8 @@ std::optional<T> list<T>::pop(std::size_t index) {
 
 template<class T>
 void list<T>::clear() {
+    // resets list to initial state (m_length == 0)
+
     if (length() > 0) {
         m_sentinel->prev->next = nullptr;
         delete m_sentinel->next;

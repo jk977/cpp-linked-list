@@ -228,20 +228,6 @@ std::optional<T> list<T>::pop(std::size_t index) {
 }
 
 template<class T>
-void list<T>::clear() {
-    // resets list to initial state (length() == 0)
-
-    if (length() > 0) {
-        m_sentinel->prev->next = nullptr; // break cycle to prevent double free
-        delete m_sentinel->next;
-
-        m_sentinel->next = nullptr;
-        m_sentinel->prev = nullptr;
-        m_length = 0;
-    }
-}
-
-template<class T>
 std::optional<T> list<T>::get_front() const {
     return get(0);
 }
@@ -264,6 +250,20 @@ std::size_t list<T>::length() const {
 template<class T>
 bool list<T>::empty() const {
     return length() == 0;
+}
+
+template<class T>
+void list<T>::clear() {
+    // resets list to initial state (length() == 0)
+
+    if (length() > 0) {
+        m_sentinel->prev->next = nullptr; // break cycle to prevent double free
+        delete m_sentinel->next;
+
+        m_sentinel->next = nullptr;
+        m_sentinel->prev = nullptr;
+        m_length = 0;
+    }
 }
 
 template<class T>

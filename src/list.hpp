@@ -33,6 +33,7 @@ public:
     std::optional<T> pop_front();
     std::optional<T> pop_back();
     std::optional<T> pop(std::size_t index);
+    void clear();
 
     std::optional<T> get_front() const;
     std::optional<T> get_back() const;
@@ -64,7 +65,7 @@ list<T>::list(): m_length(0) {
 
 template<class T>
 list<T>::~list() {
-    m_sentinel->prev->next = nullptr; // prevent double free on sentinel
+    clear();
     delete m_sentinel;
 }
 
@@ -221,6 +222,18 @@ template<class T>
 std::optional<T> list<T>::pop(std::size_t index) {
     m_length = MAX(0, m_length-1);  // prevent negative length when empty
     return pop_node(node_at(index));
+}
+
+template<class T>
+void list<T>::clear() {
+    if (length() > 0) {
+        m_sentinel->prev->next = nullptr;
+        delete m_sentinel->next;
+
+        m_sentinel->next = nullptr;
+        m_sentinel->prev = nullptr;
+        m_length = 0;
+    }
 }
 
 template<class T>

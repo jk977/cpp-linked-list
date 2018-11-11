@@ -6,7 +6,7 @@
 BOOST_AUTO_TEST_CASE(length) {
     list<int> l;
 
-    for (unsigned int i = 1; i <= 1000; i++) {
+    for (unsigned int i = 1; i <= 100; i++) {
         l.push_back(i);
         BOOST_TEST( l.length() == i );
     }
@@ -65,6 +65,30 @@ BOOST_AUTO_TEST_CASE(pop) {
     BOOST_TEST( *l.pop_front() == 0 );
     BOOST_TEST( *l.pop_back() == 4 );
     BOOST_TEST( (int) l.length() == 2 );
+}
+
+BOOST_AUTO_TEST_CASE(clear) {
+    list<int> l;
+
+    // to satisfy the compiler with signed/unsigned comparisons
+    auto length = [](auto& l) { return (int) l.length(); };
+
+    BOOST_TEST( length(l) == 0 );
+
+    l.clear();
+    BOOST_TEST( length(l) == 0 );
+
+    l.push_back(0);
+    BOOST_TEST( length(l) == 1 );
+
+    for (int i = 0; i < 100; i++) {
+        l.push_back(i);
+    }
+
+    BOOST_TEST( length(l) == 101 );
+
+    l.clear();
+    BOOST_TEST( length(l) == 0 );
 }
 
 BOOST_AUTO_TEST_CASE(insert) {

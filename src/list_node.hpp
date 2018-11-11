@@ -1,7 +1,7 @@
 #ifndef LIST_NODE_HPP_
 #define LIST_NODE_HPP_
 
-namespace dsa {
+namespace dsa::detail {
 
 template<class T>
 struct list_node {

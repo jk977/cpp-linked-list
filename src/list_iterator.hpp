@@ -4,7 +4,7 @@
 #include <iterator>
 #include "list_node.hpp"
 
-namespace dsa {
+namespace dsa::detail {
 
 template<class T>
 struct list_iterator {

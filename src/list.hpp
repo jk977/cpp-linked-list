@@ -19,8 +19,8 @@ public:
     list();
     ~list();
 
-    using iterator = list_iterator<T>;
-    using reverse_iterator = std::reverse_iterator<list_iterator<T>>;
+    using iterator = detail::list_iterator<T>;
+    using reverse_iterator = std::reverse_iterator<iterator>;
 
     iterator begin();
     iterator end();
@@ -47,18 +47,20 @@ public:
     T& operator[](std::size_t index);
 
 private:
-    list_node<T>* node_at(std::size_t index) const;
+    using node_t = detail::list_node<T>;
+
+    node_t* node_at(std::size_t index) const;
     void insert_empty(T val);
     void insert_middle(T val, std::size_t index);
 
     std::size_t m_length;
-    list_node<T>* m_sentinel;
+    node_t* m_sentinel;
 };
 
 template<class T>
 list<T>::list(): m_length(0) {
     // list is cyclical -- all nodes will always have a next and a prev
-    auto node = new list_node<T>();
+    auto node = new node_t();
     node->next = node;
     node->prev = node;
 
@@ -94,7 +96,7 @@ typename list<T>::reverse_iterator list<T>::rend() {
 template<class T>
 void list<T>::insert_empty(T val) {
     // insert into an empty list
-    auto node = new list_node(val);
+    auto node = new node_t(val);
 
     m_sentinel->next = node;
     m_sentinel->prev = node;
@@ -108,7 +110,7 @@ void list<T>::push_front(T val) {
         insert_empty(val);
     } else {
         auto old_head = m_sentinel->next;
-        auto new_head = new list_node(val);
+        auto new_head = new node_t(val);
 
         m_sentinel->next = new_head;
         new_head->prev = m_sentinel;
@@ -125,7 +127,7 @@ void list<T>::push_back(T val) {
         insert_empty(val);
     } else {
         auto old_tail = m_sentinel->prev;
-        auto new_tail = new list_node(val);
+        auto new_tail = new node_t(val);
 
         m_sentinel->prev = new_tail;
         new_tail->prev = old_tail;
@@ -137,7 +139,7 @@ void list<T>::push_back(T val) {
 }
 
 template<class T>
-list_node<T>* list<T>::node_at(std::size_t index) const {
+typename list<T>::node_t* list<T>::node_at(std::size_t index) const {
     auto current = m_sentinel->next;
     std::size_t i = 0;
 
@@ -157,7 +159,7 @@ list_node<T>* list<T>::node_at(std::size_t index) const {
 template<class T>
 void list<T>::insert_middle(T val, std::size_t index) {
     // insert at a place other than the front or back
-    auto new_node = new list_node(val);
+    auto new_node = new node_t(val);
     auto target = node_at(index);
     auto prev = target->prev;
 
@@ -194,7 +196,7 @@ std::optional<T> list<T>::pop_back() {
 template<class T>
 std::optional<T> list<T>::pop(std::size_t index) {
     m_length = MAX(0, m_length-1);  // decrement length but prevent negative length when empty
-    return pop_node(node_at(index));
+    return detail::pop_node(node_at(index));
 }
 
 template<class T>
@@ -209,7 +211,7 @@ std::optional<T> list<T>::get_back() const {
 
 template<class T>
 std::optional<T> list<T>::get(std::size_t index) const {
-    return value_of(node_at(index));
+    return detail::value_of(node_at(index));
 }
 
 template<class T>

@@ -2,7 +2,6 @@
 #define LIST_HPP_
 
 #include <cstdlib>
-#include <utility>
 #include <optional>
 #include <iterator>
 

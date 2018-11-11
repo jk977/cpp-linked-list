@@ -1,6 +1,8 @@
 #ifndef LIST_NODE_HPP_
 #define LIST_NODE_HPP_
 
+#include <optional>
+
 namespace dsa::detail {
 
 template<class T>

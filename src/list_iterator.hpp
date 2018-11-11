@@ -2,6 +2,8 @@
 #define LIST_ITERATOR_HPP_
 
 #include <iterator>
+#include <cstddef>
+
 #include "list_node.hpp"
 
 namespace dsa::detail {

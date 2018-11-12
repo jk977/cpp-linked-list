@@ -3,11 +3,12 @@
 
 #include <cstdlib>
 #include <optional>
-#include <iterator>
 #include <functional>
 
+#include <mutex>
+#include <shared_mutex>
+
 #include "list_node.hpp"
-#include "list_iterator.hpp"
 
 namespace dsa {
 
@@ -18,15 +19,6 @@ public:
     ~list();
 
     using map_fn = std::function<T(T const&)>;
-
-    using iterator = detail::list_iterator<T>;
-    using reverse_iterator = std::reverse_iterator<iterator>;
-
-    iterator begin();
-    iterator end();
-
-    reverse_iterator rbegin();
-    reverse_iterator rend();
 
     void map(map_fn f);
 
@@ -46,8 +38,6 @@ public:
     bool empty() const;
     void clear();
 
-    T& operator[](std::size_t index);
-
 private:
     using node_t = detail::list_node<T>;
 
@@ -55,8 +45,9 @@ private:
     void insert_empty(T val);
     void insert_middle(T val, std::size_t index);
 
-    std::size_t m_length;
     node_t* m_sentinel;
+    std::shared_mutex mutable m_mutex;
+    std::size_t m_length;
 };
 
 template<class T>
@@ -77,41 +68,30 @@ list<T>::~list() {
 }
 
 template<class T>
-typename list<T>::iterator list<T>::begin() {
-    return iterator(m_sentinel->next);
-}
-
-template<class T>
-typename list<T>::iterator list<T>::end() {
-    return iterator(m_sentinel);
-}
-
-template<class T>
-typename list<T>::reverse_iterator list<T>::rbegin() {
-    return reverse_iterator(end());
-}
-
-template<class T>
-typename list<T>::reverse_iterator list<T>::rend() {
-    return reverse_iterator(m_sentinel->next);
-}
-
-template<class T>
 void list<T>::map(list<T>::map_fn f) {
-    for (auto& elem : *this) {
-        elem = f(elem);
+    std::unique_lock lock(m_mutex);
+
+    auto current = m_sentinel->next;
+
+    while (current != m_sentinel) {
+        current->value = f(current->value);
+        current = current->next;
     }
 }
 
 template<class T>
 void list<T>::insert_empty(T val) {
-    // insert into an empty list
+    // insert value into an empty list
+    std::unique_lock lock(m_mutex);
+
     auto node = new node_t(val);
 
     m_sentinel->next = node;
     m_sentinel->prev = node;
     node->next = m_sentinel;
     node->prev = m_sentinel;
+
+    m_length = 1;
 }
 
 template<class T>
@@ -119,6 +99,8 @@ void list<T>::push_front(T val) {
     if (length() == 0) {
         insert_empty(val);
     } else {
+        std::unique_lock lock(m_mutex);
+
         auto old_head = m_sentinel->next;
         auto new_head = new node_t(val);
 
@@ -126,9 +108,9 @@ void list<T>::push_front(T val) {
         new_head->prev = m_sentinel;
         new_head->next = old_head;
         old_head->prev = new_head;
-    }
 
-    m_length++;
+        m_length++;
+    }
 }
 
 template<class T>
@@ -136,6 +118,8 @@ void list<T>::push_back(T val) {
     if (length() == 0) {
         insert_empty(val);
     } else {
+        std::unique_lock lock(m_mutex);
+
         auto old_tail = m_sentinel->prev;
         auto new_tail = new node_t(val);
 
@@ -143,13 +127,15 @@ void list<T>::push_back(T val) {
         new_tail->prev = old_tail;
         new_tail->next = m_sentinel;
         old_tail->next = new_tail;
-    }
 
-    m_length++;
+        m_length++;
+    }
 }
 
 template<class T>
 typename list<T>::node_t* list<T>::node_at(std::size_t index) const {
+    // gets node at specified index, assuming thread has ownership of list
+    // function is not thread-safe otherwise
     auto current = m_sentinel->next;
     std::size_t i = 0;
 
@@ -169,6 +155,8 @@ typename list<T>::node_t* list<T>::node_at(std::size_t index) const {
 template<class T>
 void list<T>::insert_middle(T val, std::size_t index) {
     // insert at a place other than the front or back
+    std::unique_lock lock(m_mutex);
+
     auto new_node = new node_t(val);
     auto target = node_at(index);
     auto prev = target->prev;
@@ -205,10 +193,8 @@ std::optional<T> list<T>::pop_back() {
 
 template<class T>
 std::optional<T> list<T>::pop(std::size_t index) {
-    if (m_length != 0) {
-        m_length--;
-    }
-
+    std::unique_lock lock(m_mutex);
+    m_length = MAX(0, m_length-1);  // decrement length but prevent negative length when empty
     return detail::pop_node(node_at(index));
 }
 
@@ -224,11 +210,13 @@ std::optional<T> list<T>::get_back() const {
 
 template<class T>
 std::optional<T> list<T>::get(std::size_t index) const {
+    std::shared_lock lock(m_mutex);
     return detail::value_of(node_at(index));
 }
 
 template<class T>
 std::size_t list<T>::length() const {
+    std::shared_lock lock(m_mutex);
     return m_length;
 }
 
@@ -242,6 +230,8 @@ void list<T>::clear() {
     // resets list to initial state (length() == 0)
 
     if (length() > 0) {
+        std::unique_lock lock(m_mutex);
+
         m_sentinel->prev->next = nullptr; // break cycle to prevent double free
         delete m_sentinel->next;
 
@@ -249,15 +239,6 @@ void list<T>::clear() {
         m_sentinel->prev = m_sentinel;
         m_length = 0;
     }
-}
-
-template<class T>
-T& list<T>::operator[](std::size_t index) {
-    if (index >= length()) {
-        throw std::out_of_range("Index is greater than the list length.");
-    }
-
-    return node_at(index)->value;
 }
 
 }

@@ -33,7 +33,11 @@ public:
     value_type get_back() const;
     value_type get(std::size_t index) const;
 
-    void map(modify_fn f);
+    void map(modify_fn const& f);
+
+    void modify_front(modify_fn const& f);
+    void modify_back(modify_fn const& f);
+    void modify(std::size_t index, modify_fn const& f);
 
     std::size_t length() const;
     bool empty() const;
@@ -71,7 +75,7 @@ list<T>::~list() {
 }
 
 template<class T>
-void list<T>::map(list<T>::map_fn f) {
+void list<T>::map(list<T>::modify_fn const& f) {
     std::unique_lock lock(m_mutex);
 
     auto current = m_sentinel->next;
@@ -84,26 +88,22 @@ void list<T>::map(list<T>::map_fn f) {
 
 template<class T>
 void list<T>::insert_empty(T val) {
-    // insert value into an empty list
-    std::unique_lock lock(m_mutex);
-
+    // insert value into an empty list, assuming thread has unique ownership of list
     auto node = new node_t(val);
 
     m_sentinel->next = node;
     m_sentinel->prev = node;
     node->next = m_sentinel;
     node->prev = m_sentinel;
-
-    m_length = 1;
 }
 
 template<class T>
 void list<T>::push_front(T val) {
-    if (length() == 0) {
+    std::unique_lock lock(m_mutex);
+
+    if (m_length == 0) {
         insert_empty(val);
     } else {
-        std::unique_lock lock(m_mutex);
-
         auto old_head = m_sentinel->next;
         auto new_head = new node_t(val);
 
@@ -111,18 +111,18 @@ void list<T>::push_front(T val) {
         new_head->prev = m_sentinel;
         new_head->next = old_head;
         old_head->prev = new_head;
-
-        m_length++;
     }
+
+    m_length++;
 }
 
 template<class T>
 void list<T>::push_back(T val) {
-    if (length() == 0) {
+    std::unique_lock lock(m_mutex);
+
+    if (m_length == 0) {
         insert_empty(val);
     } else {
-        std::unique_lock lock(m_mutex);
-
         auto old_tail = m_sentinel->prev;
         auto new_tail = new node_t(val);
 
@@ -130,9 +130,9 @@ void list<T>::push_back(T val) {
         new_tail->prev = old_tail;
         new_tail->next = m_sentinel;
         old_tail->next = new_tail;
-
-        m_length++;
     }
+
+    m_length++;
 }
 
 template<class T>
@@ -208,7 +208,8 @@ typename list<T>::value_type list<T>::get_front() const {
 
 template<class T>
 typename list<T>::value_type list<T>::get_back() const {
-    return get(length() - 1);
+    std::shared_lock lock(m_mutex);
+    return get(m_length - 1);
 }
 
 template<class T>
@@ -225,15 +226,16 @@ std::size_t list<T>::length() const {
 
 template<class T>
 bool list<T>::empty() const {
-    return length() == 0;
+    std::shared_lock lock(m_mutex);
+    return m_length == 0;
 }
 
 template<class T>
 void list<T>::clear() {
     // resets list to initial state (length() == 0)
+    std::unique_lock lock(m_mutex);
 
-    if (length() > 0) {
-        std::unique_lock lock(m_mutex);
+    if (m_length > 0) {
 
         m_sentinel->prev->next = nullptr; // break cycle to prevent double free
         delete m_sentinel->next;

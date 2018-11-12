@@ -19,19 +19,18 @@ public:
     ~list();
 
     using modify_fn = std::function<T(T const&)>;
-    using value_type = std::optional<T>;
 
     void push_front(T val);
     void push_back(T val);
     void insert(T val, std::size_t index);
 
-    value_type pop_front();
-    value_type pop_back();
-    value_type pop(std::size_t index);
+    std::optional<T> pop_front();
+    std::optional<T> pop_back();
+    std::optional<T> pop(std::size_t index);
 
-    value_type get_front() const;
-    value_type get_back() const;
-    value_type get(std::size_t index) const;
+    std::optional<T> get_front() const;
+    std::optional<T> get_back() const;
+    std::optional<T> get(std::size_t index) const;
 
     void map(modify_fn const& f);
 
@@ -51,7 +50,7 @@ private:
     void insert_empty(T val);
     void insert_middle(T val, std::size_t index);
 
-    value_type pop_at(std::size_t index);
+    std::optional<T> pop_at(std::size_t index);
 
     void modify_at(std::size_t index, modify_fn const& f);
 
@@ -218,35 +217,35 @@ void list<T>::insert(T val, std::size_t index) {
 }
 
 template<class T>
-typename list<T>::value_type list<T>::pop_front() {
+std::optional<T> list<T>::pop_front() {
     return pop(0);
 }
 
 template<class T>
-typename list<T>::value_type list<T>::pop_back() {
+std::optional<T> list<T>::pop_back() {
     return pop(length() - 1);
 }
 
 template<class T>
-typename list<T>::value_type list<T>::pop(std::size_t index) {
+std::optional<T> list<T>::pop(std::size_t index) {
     std::unique_lock lock(m_mutex);
     m_length = MAX(0, m_length-1);  // decrement length but prevent negative length when empty
     return detail::pop_node(node_at(index));
 }
 
 template<class T>
-typename list<T>::value_type list<T>::get_front() const {
+std::optional<T> list<T>::get_front() const {
     return get(0);
 }
 
 template<class T>
-typename list<T>::value_type list<T>::get_back() const {
+std::optional<T> list<T>::get_back() const {
     std::shared_lock lock(m_mutex);
     return get(m_length - 1);
 }
 
 template<class T>
-typename list<T>::value_type list<T>::get(std::size_t index) const {
+std::optional<T> list<T>::get(std::size_t index) const {
     std::shared_lock lock(m_mutex);
     return detail::value_of(node_at(index));
 }

@@ -18,21 +18,22 @@ public:
     list();
     ~list();
 
-    using map_fn = std::function<T(T const&)>;
-
-    void map(map_fn f);
+    using modify_fn = std::function<T(T const&)>;
+    using value_type = std::optional<T>;
 
     void push_front(T val);
     void push_back(T val);
     void insert(T val, std::size_t index);
 
-    std::optional<T> pop_front();
-    std::optional<T> pop_back();
-    std::optional<T> pop(std::size_t index);
+    value_type pop_front();
+    value_type pop_back();
+    value_type pop(std::size_t index);
 
-    std::optional<T> get_front() const;
-    std::optional<T> get_back() const;
-    std::optional<T> get(std::size_t index) const;
+    value_type get_front() const;
+    value_type get_back() const;
+    value_type get(std::size_t index) const;
+
+    void map(modify_fn f);
 
     std::size_t length() const;
     bool empty() const;
@@ -40,10 +41,12 @@ public:
 
 private:
     using node_t = detail::list_node<T>;
-
     node_t* node_at(std::size_t index) const;
+
     void insert_empty(T val);
     void insert_middle(T val, std::size_t index);
+
+    value_type pop_at(std::size_t index);
 
     node_t* m_sentinel;
     std::shared_mutex mutable m_mutex;
@@ -134,7 +137,7 @@ void list<T>::push_back(T val) {
 
 template<class T>
 typename list<T>::node_t* list<T>::node_at(std::size_t index) const {
-    // gets node at specified index, assuming thread has ownership of list
+    // gets node at specified index, assuming thread has ownership of list.
     // function is not thread-safe otherwise
     auto current = m_sentinel->next;
     std::size_t i = 0;
@@ -182,34 +185,34 @@ void list<T>::insert(T val, std::size_t index) {
 }
 
 template<class T>
-std::optional<T> list<T>::pop_front() {
+typename list<T>::value_type list<T>::pop_front() {
     return pop(0);
 }
 
 template<class T>
-std::optional<T> list<T>::pop_back() {
+typename list<T>::value_type list<T>::pop_back() {
     return pop(length() - 1);
 }
 
 template<class T>
-std::optional<T> list<T>::pop(std::size_t index) {
+typename list<T>::value_type list<T>::pop(std::size_t index) {
     std::unique_lock lock(m_mutex);
     m_length = MAX(0, m_length-1);  // decrement length but prevent negative length when empty
     return detail::pop_node(node_at(index));
 }
 
 template<class T>
-std::optional<T> list<T>::get_front() const {
+typename list<T>::value_type list<T>::get_front() const {
     return get(0);
 }
 
 template<class T>
-std::optional<T> list<T>::get_back() const {
+typename list<T>::value_type list<T>::get_back() const {
     return get(length() - 1);
 }
 
 template<class T>
-std::optional<T> list<T>::get(std::size_t index) const {
+typename list<T>::value_type list<T>::get(std::size_t index) const {
     std::shared_lock lock(m_mutex);
     return detail::value_of(node_at(index));
 }

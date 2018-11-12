@@ -21,11 +21,11 @@ struct list_iterator {
     reference operator*() { return m_current->value; }
     pointer operator->() { return &**this; }
 
-    bool operator==(list_iterator<value_type> const& rhs) {
+    bool operator==(list_iterator<value_type> const& rhs) const {
         return m_current == rhs.m_current;
     }
 
-    bool operator!=(list_iterator<value_type> const& rhs) {
+    bool operator!=(list_iterator<value_type> const& rhs) const {
         return !(*this == rhs);
     }
 

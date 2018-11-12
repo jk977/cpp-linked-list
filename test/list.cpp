@@ -5,25 +5,47 @@
 
 using dsa::list;
 
-BOOST_AUTO_TEST_CASE(length) {
+BOOST_AUTO_TEST_CASE(iterators) {
     list<int> l;
 
-    for (unsigned int i = 1; i <= 100; i++) {
+    for (int i = 0; i < 100; i++) {
         l.push_back(i);
-        BOOST_TEST( l.length() == i );
     }
+
+    int index = 0;
+
+    for (auto n : l) {
+        BOOST_TEST( index == n );
+        ++index;
+    }
+
+    BOOST_TEST( index == 100 );
+
+    for (auto iter = l.rbegin(); iter != l.rend(); ++iter) {
+        --index;
+        BOOST_TEST( index == *iter );
+    }
+
+    BOOST_TEST( index == 0 );
 }
 
-BOOST_AUTO_TEST_CASE(empty) {
+BOOST_AUTO_TEST_CASE(map) {
     list<int> l;
-
-    BOOST_TEST( l.empty() );
-
     l.push_back(1);
-    BOOST_TEST( !l.empty() );
-
     l.push_back(2);
-    BOOST_TEST( !l.empty() );
+    l.push_back(3);
+
+    l.map([](auto n) { return n*2; });
+
+    BOOST_TEST( l[0] == 2 );
+    BOOST_TEST( l[1] == 4 );
+    BOOST_TEST( l[2] == 6 );
+
+    l.map([](auto n) { return n+1; });
+
+    BOOST_TEST( l[0] == 3 );
+    BOOST_TEST( l[1] == 5 );
+    BOOST_TEST( l[2] == 7 );
 }
 
 BOOST_AUTO_TEST_CASE(push) {
@@ -44,6 +66,26 @@ BOOST_AUTO_TEST_CASE(push) {
         l.push_back(i);
         BOOST_TEST( *l.get(i + length) == i );
     }
+}
+
+BOOST_AUTO_TEST_CASE(insert) {
+    list<int> l;
+
+    for (int i = 0; i < 10; i++) {
+        l.push_front(i);
+    }
+
+    l.insert(10, 0);
+    BOOST_TEST( l[0] == 10 );
+
+    l.insert(11, l.length());
+    BOOST_TEST( *l.get_back() == 11 );
+
+    l.insert(3, 3);
+    BOOST_TEST( l[3] == 3 );
+
+    l.insert(6, 8);
+    BOOST_TEST( l[8] == 6 );
 }
 
 BOOST_AUTO_TEST_CASE(pop) {
@@ -69,6 +111,45 @@ BOOST_AUTO_TEST_CASE(pop) {
     BOOST_TEST( (int) l.length() == 2 );
 }
 
+BOOST_AUTO_TEST_CASE(get) {
+    list<int> l;
+
+    BOOST_TEST( !l.get(10).has_value() );
+    BOOST_TEST( !l.get_front().has_value() );
+    BOOST_TEST( !l.get_back().has_value() );
+
+    for (int i = 0; i < 100; i++) {
+        l.push_back(i);
+        BOOST_TEST( *l.get(i) == i );
+        BOOST_TEST( l[i] == i );
+    }
+
+    BOOST_TEST( *l.get_front() == 0 );
+    BOOST_TEST( *l.get_back() == 99 );
+    BOOST_TEST( !l.get(999).has_value() );
+}
+
+BOOST_AUTO_TEST_CASE(length) {
+    list<int> l;
+
+    for (unsigned int i = 1; i <= 100; i++) {
+        l.push_back(i);
+        BOOST_TEST( l.length() == i );
+    }
+}
+
+BOOST_AUTO_TEST_CASE(empty) {
+    list<int> l;
+
+    BOOST_TEST( l.empty() );
+
+    l.push_back(1);
+    BOOST_TEST( !l.empty() );
+
+    l.push_back(2);
+    BOOST_TEST( !l.empty() );
+}
+
 BOOST_AUTO_TEST_CASE(clear) {
     list<int> l;
 
@@ -91,67 +172,5 @@ BOOST_AUTO_TEST_CASE(clear) {
 
     l.clear();
     BOOST_TEST( length(l) == 0 );
-}
-
-BOOST_AUTO_TEST_CASE(insert) {
-    list<int> l;
-
-    for (int i = 0; i < 10; i++) {
-        l.push_front(i);
-    }
-
-    l.insert(10, 0);
-    BOOST_TEST( l[0] == 10 );
-
-    l.insert(11, l.length());
-    BOOST_TEST( *l.get_back() == 11 );
-
-    l.insert(3, 3);
-    BOOST_TEST( l[3] == 3 );
-
-    l.insert(6, 8);
-    BOOST_TEST( l[8] == 6 );
-}
-
-BOOST_AUTO_TEST_CASE(get) {
-    list<int> l;
-
-    BOOST_TEST( !l.get(10).has_value() );
-    BOOST_TEST( !l.get_front().has_value() );
-    BOOST_TEST( !l.get_back().has_value() );
-
-    for (int i = 0; i < 100; i++) {
-        l.push_back(i);
-        BOOST_TEST( *l.get(i) == i );
-        BOOST_TEST( l[i] == i );
-    }
-
-    BOOST_TEST( *l.get_front() == 0 );
-    BOOST_TEST( *l.get_back() == 99 );
-    BOOST_TEST( !l.get(999).has_value() );
-}
-
-BOOST_AUTO_TEST_CASE(iterators) {
-    list<int> l;
-
-    for (int i = 0; i < 100; i++) {
-        l.push_back(i);
-    }
-
-    int index = 0;
-
-    for (auto n : l) {
-        BOOST_TEST( index == n );
-        ++index;
-    }
-
-    BOOST_TEST( index == 100 );
-
-    for (auto iter = l.rbegin(); iter != l.rend(); ++iter) {
-        --index;
-        BOOST_TEST( index == *iter );
-    }
-
-    BOOST_TEST( index == 0 );
 }
 

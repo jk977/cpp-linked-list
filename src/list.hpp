@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <optional>
 #include <iterator>
+#include <functional>
 
 #include "list_node.hpp"
 #include "list_iterator.hpp"
@@ -18,6 +19,8 @@ public:
     list();
     ~list();
 
+    using map_fn = std::function<T(T const&)>;
+
     using iterator = detail::list_iterator<T>;
     using reverse_iterator = std::reverse_iterator<iterator>;
 
@@ -26,6 +29,8 @@ public:
 
     reverse_iterator rbegin();
     reverse_iterator rend();
+
+    void map(map_fn f);
 
     void push_front(T val);
     void push_back(T val);
@@ -90,6 +95,13 @@ typename list<T>::reverse_iterator list<T>::rbegin() {
 template<class T>
 typename list<T>::reverse_iterator list<T>::rend() {
     return reverse_iterator(m_sentinel->next);
+}
+
+template<class T>
+void list<T>::map(list<T>::map_fn f) {
+    for (auto& elem : *this) {
+        elem = f(elem);
+    }
 }
 
 template<class T>

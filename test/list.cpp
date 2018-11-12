@@ -163,7 +163,6 @@ BOOST_AUTO_TEST_CASE(clear) {
     BOOST_TEST( length(l) == 0 );
 }
 
-#if 0
 BOOST_AUTO_TEST_CASE(threaded_write) {
     list<int> l;
 
@@ -173,7 +172,8 @@ BOOST_AUTO_TEST_CASE(threaded_write) {
 
     auto inc_all = [](list<int>& l) {
         for (unsigned int i = 0; i < l.length(); i++) {
-            ++(*l.get(i));
+            auto elem = *l.get(i);
+            elem++;
         }
     };
 
@@ -189,4 +189,3 @@ BOOST_AUTO_TEST_CASE(threaded_write) {
         BOOST_TEST( *l.get(i) == (thread_count + i) );
     }
 }
-#endif

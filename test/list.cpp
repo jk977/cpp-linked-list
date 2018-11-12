@@ -13,30 +13,6 @@ using dsa::list;
 int constexpr thread_count = 500;
 std::array<std::thread, thread_count> threads;
 
-BOOST_AUTO_TEST_CASE(map) {
-    list<int> l;
-
-    for (int i = 0; i < 100; i++) {
-        l.push_back(i);
-    }
-
-    auto add_all = [&l](int x) {
-        l.map( [x](auto& n) { return n+x; } );
-    };
-
-    for (int i = 0; i < thread_count; i++) {
-        threads[i] = std::thread(add_all, 1);
-    }
-
-    for (int i = 0; i < thread_count; i++) {
-        threads[i].join();
-    }
-
-    for (int i = 0; i < (int) l.length(); i++) {
-        BOOST_TEST( *l.get(i) == (thread_count + i) );
-    }
-}
-
 BOOST_AUTO_TEST_CASE(push) {
     list<int> l;
 
@@ -116,6 +92,47 @@ BOOST_AUTO_TEST_CASE(get) {
     BOOST_TEST( *l.get_front() == 0 );
     BOOST_TEST( *l.get_back() == 99 );
     BOOST_TEST( !l.get(999).has_value() );
+}
+
+BOOST_AUTO_TEST_CASE(map) {
+    list<int> l;
+
+    for (int i = 0; i < 100; i++) {
+        l.push_back(i);
+    }
+
+    auto add_all = [&l](int x) {
+        l.map( [x](auto& n) { return n+x; } );
+    };
+
+    for (int i = 0; i < thread_count; i++) {
+        threads[i] = std::thread(add_all, 1);
+    }
+
+    for (int i = 0; i < thread_count; i++) {
+        threads[i].join();
+    }
+
+    for (int i = 0; i < (int) l.length(); i++) {
+        BOOST_TEST( *l.get(i) == (thread_count + i) );
+    }
+}
+
+BOOST_AUTO_TEST_CASE(modify) {
+    list<int> l;
+
+    for (int i = 0; i < 5; i++) {
+        l.push_back(i+1);
+    }
+
+    l.modify_front( [](auto n) { return n*2; } );
+    BOOST_TEST( *l.get_front() == 2 );
+
+    l.modify_back( [](auto n) { return n+3; } );
+    BOOST_TEST( *l.get_back() == 8 );
+
+    l.modify(2, [](auto n) { return n+1; } );
+    BOOST_TEST( *l.get(2) == 4 );
 }
 
 BOOST_AUTO_TEST_CASE(length) {

@@ -45,12 +45,15 @@ public:
 
 private:
     using node_t = detail::list_node<T>;
+
     node_t* node_at(std::size_t index) const;
 
     void insert_empty(T val);
     void insert_middle(T val, std::size_t index);
 
     value_type pop_at(std::size_t index);
+
+    void modify_at(std::size_t index, modify_fn const& f);
 
     node_t* m_sentinel;
     std::shared_mutex mutable m_mutex;
@@ -84,6 +87,36 @@ void list<T>::map(list<T>::modify_fn const& f) {
         current->value = f(current->value);
         current = current->next;
     }
+}
+
+template<class T>
+void list<T>::modify_at(std::size_t index, list<T>::modify_fn const& f) {
+    // assumes thread has exclusive ownership of list
+    auto target = node_at(index);
+
+    if (target == nullptr) {
+        return;
+    }
+
+    target->value = f(target->value);
+}
+
+template<class T>
+void list<T>::modify_front(list<T>::modify_fn const& f) {
+    std::unique_lock lock(m_mutex);
+    modify_at(0, f);
+}
+
+template<class T>
+void list<T>::modify_back(list<T>::modify_fn const& f) {
+    std::unique_lock lock(m_mutex);
+    modify_at(m_length-1, f);
+}
+
+template<class T>
+void list<T>::modify(std::size_t index, list<T>::modify_fn const& f) {
+    std::unique_lock lock(m_mutex);
+    modify_at(index, f);
 }
 
 template<class T>

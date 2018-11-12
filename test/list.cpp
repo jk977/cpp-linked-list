@@ -172,8 +172,9 @@ BOOST_AUTO_TEST_CASE(threaded_write) {
 
     auto inc_all = [](list<int>& l) {
         for (unsigned int i = 0; i < l.length(); i++) {
-            auto elem = *l.get(i);
-            elem++;
+            l.modify(i, [](auto n) {
+                return n+1;
+            });
         }
     };
 

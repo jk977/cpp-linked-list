@@ -7,6 +7,7 @@ CXXFLAGS ?= -g -pthread -std=c++17 -I$(BOOST_PATH) -O0 -Wall -Wextra -pedantic -
 
 all: bin clean
 	$(CXX) $(CXXFLAGS) list.cpp -o bin/list
+	$(CXX) $(CXXFLAGS) list_ts.cpp -o bin/list_ts
 	$(CXX) $(CXXFLAGS) list_iterator.cpp -o bin/list_iterator
 
 bin:
@@ -20,4 +21,5 @@ clean:
 
 run: all
 	bin/list; true
+	bin/list_ts; true
 	bin/list_iterator; true

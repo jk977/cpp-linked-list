@@ -56,6 +56,13 @@ BOOST_AUTO_TEST_CASE(insert) {
 BOOST_AUTO_TEST_CASE(pop) {
     list<int> l;
 
+    BOOST_TEST( !l.pop_front().has_value() );
+    BOOST_TEST( !l.pop_back().has_value() );
+
+    BOOST_TEST( !l.pop(-1).has_value() );
+    BOOST_TEST( !l.pop(1).has_value() );
+    BOOST_TEST( !l.pop(10).has_value() );
+
     for (int i = 0; i < 100; i++) {
         l.push_back(i);
         l.push_front(-i);
@@ -78,8 +85,12 @@ BOOST_AUTO_TEST_CASE(pop) {
 
 BOOST_AUTO_TEST_CASE(get) {
     list<int> l;
+    auto small_value = 1 << (sizeof(1) * 8 - 1);
 
     BOOST_TEST( !l.get(10).has_value() );
+    BOOST_TEST( !l.get(-1).has_value() );
+    BOOST_TEST( !l.get(small_value).has_value() );
+
     BOOST_TEST( !l.get_front().has_value() );
     BOOST_TEST( !l.get_back().has_value() );
 
@@ -96,6 +107,14 @@ BOOST_AUTO_TEST_CASE(get) {
 
 BOOST_AUTO_TEST_CASE(map) {
     list<int> l;
+    bool has_run = false;
+    auto runner = [&has_run](auto n) {
+        has_run = true; // shouldn't run on an empty list
+        return n;
+    };
+
+    l.map(runner);
+    BOOST_TEST(!has_run);
 
     for (int i = 0; i < 100; i++) {
         l.push_back(i);
@@ -120,10 +139,26 @@ BOOST_AUTO_TEST_CASE(map) {
 
 BOOST_AUTO_TEST_CASE(modify) {
     list<int> l;
+    bool has_run = false;
+    auto runner = [&has_run](auto n) {
+        has_run = true;
+        return n;
+    };
+
+    BOOST_TEST( l.empty() );
+
+    l.modify_front(runner);
+    BOOST_TEST(!has_run);
+
+    l.modify_back(runner);
+    BOOST_TEST(!has_run);
 
     for (int i = 0; i < 5; i++) {
         l.push_back(i+1);
     }
+
+    l.modify(-1, runner);
+    BOOST_TEST(!has_run);
 
     l.modify_front( [](auto n) { return n*2; } );
     BOOST_TEST( *l.get_front() == 2 );
@@ -137,6 +172,8 @@ BOOST_AUTO_TEST_CASE(modify) {
 
 BOOST_AUTO_TEST_CASE(length) {
     list<int> l;
+
+    BOOST_TEST( l.length() == 0 );
 
     for (unsigned int i = 1; i <= 100; i++) {
         l.push_back(i);
@@ -178,6 +215,7 @@ BOOST_AUTO_TEST_CASE(clear) {
 
     l.clear();
     BOOST_TEST( length(l) == 0 );
+    BOOST_TEST(l.empty());
 }
 
 BOOST_AUTO_TEST_CASE(threaded_write) {

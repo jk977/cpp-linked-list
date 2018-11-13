@@ -1,14 +1,14 @@
 #define BOOST_TEST_MODULE List Test
 #include <boost/test/included/unit_test.hpp>
 
-#include "../src/list.hpp"
+#include "../src/ts_list.hpp"
 
 #include <iostream>
 #include <functional>
 #include <thread>
 #include <array>
 
-using dsa::list;
+using dsa::ts::list;
 
 int constexpr thread_count = 500;
 std::array<std::thread, thread_count> threads;

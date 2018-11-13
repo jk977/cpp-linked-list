@@ -1,7 +1,11 @@
-#ifndef LIST_HPP_
-#define LIST_HPP_
+/*
+ * Thread-safe linked list implementation.
+ */
 
-#include <cstdlib>
+#ifndef TS_LIST_HPP_
+#define TS_LIST_HPP_
+
+#include <cstddef>
 #include <optional>
 #include <functional>
 
@@ -10,7 +14,7 @@
 
 #include "list_node.hpp"
 
-namespace dsa {
+namespace dsa::ts {
 
 template<class T>
 class list {
@@ -143,7 +147,7 @@ void list<T>::push_front(T val) {
         old_head->prev = new_head;
     }
 
-    m_length++;
+    ++m_length;
 }
 
 template<class T>
@@ -162,7 +166,7 @@ void list<T>::push_back(T val) {
         old_tail->next = new_tail;
     }
 
-    m_length++;
+    ++m_length;
 }
 
 template<class T>
@@ -176,7 +180,7 @@ typename list<T>::node_t* list<T>::node_at(std::size_t index) const {
     // when index > length()
     while (current != m_sentinel && i < index) {
         current = current->next;
-        i++;
+        ++i;
     }
 
     // return nullptr instead of sentinel if index was out of bounds
@@ -200,7 +204,7 @@ void list<T>::insert_middle(T val, std::size_t index) {
     new_node->next = target;
     target->prev = new_node;
 
-    m_length++;
+    ++m_length;
 }
 
 template<class T>
@@ -216,25 +220,41 @@ void list<T>::insert(T val, std::size_t index) {
 
 template<class T>
 std::optional<T> list<T>::pop_at(std::size_t index) {
-    m_length = MAX(0, m_length-1);  // decrement length but prevent negative length when empty
+    // assumes thread has exclusive ownership of list and m_length > 0
+    --m_length;
     return detail::pop_node(node_at(index));
 }
 
 template<class T>
 std::optional<T> list<T>::pop_front() {
     std::unique_lock lock(m_mutex);
+
+    if (m_length == 0) {
+        return std::nullopt;
+    }
+
     return pop_at(0);
 }
 
 template<class T>
 std::optional<T> list<T>::pop_back() {
     std::unique_lock lock(m_mutex);
+
+    if (m_length == 0) {
+        return std::nullopt;
+    }
+
     return pop_at(m_length-1);
 }
 
 template<class T>
 std::optional<T> list<T>::pop(std::size_t index) {
     std::unique_lock lock(m_mutex);
+
+    if (m_length == 0) {
+        return std::nullopt;
+    }
+
     return pop_at(index);
 }
 
@@ -284,4 +304,4 @@ void list<T>::clear() {
 
 }
 
-#endif // LIST_HPP_
+#endif // TS_LIST_HPP_

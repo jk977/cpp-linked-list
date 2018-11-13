@@ -229,6 +229,11 @@ typename list<T>::access_type list<T>::get_front() const {
 template<class T>
 typename list<T>::access_type list<T>::get_back() const {
     std::shared_lock lock(m_mutex);
+
+    if (m_length == 0) {
+        return std::nullopt;
+    }
+
     return get(m_length-1);
 }
 

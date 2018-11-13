@@ -2,10 +2,11 @@
  * Thread-safe linked list implementation.
  */
 
-#ifndef TS_LIST_HPP_
-#define TS_LIST_HPP_
+#ifndef LIST_HPP_
+#define LIST_HPP_
 
 #include <cstddef>
+#include <cassert>
 #include <optional>
 #include <functional>
 
@@ -14,7 +15,7 @@
 
 #include "list_node.hpp"
 
-namespace dsa::ts {
+namespace dsa {
 
 template<class T>
 class list {
@@ -81,7 +82,9 @@ list<T>::~list() {
 
 template<class T>
 void list<T>::insert_empty(T val) {
-    // insert value into an empty list, assuming thread has exclusive ownership of list
+    assert( m_length == 0 );
+    assert( !m_mutex.try_lock() );
+
     auto node = new node_t(val);
 
     m_sentinel->next = node;
@@ -159,7 +162,8 @@ void list<T>::insert(T val, std::size_t index) {
 
 template<class T>
 typename list<T>::node_t* list<T>::node_at(std::size_t index) const {
-    // gets node at specified index, assuming thread has ownership of list.
+    assert( !m_mutex.try_lock() );
+
     auto current = m_sentinel->next;
     std::size_t i = 0;
 
@@ -178,7 +182,8 @@ typename list<T>::node_t* list<T>::node_at(std::size_t index) const {
 
 template<class T>
 typename list<T>::access_type list<T>::pop_at(std::size_t index) {
-    // assumes thread has exclusive ownership of list and m_length > 0
+    assert( !m_mutex.try_lock() );
+
     --m_length;
     return detail::pop_node(node_at(index));
 }
@@ -247,10 +252,11 @@ void list<T>::map(list<T>::modify_fn const& f) {
 
 template<class T>
 void list<T>::modify_at(std::size_t index, list<T>::modify_fn const& f) {
-    // assumes thread has exclusive ownership of list.
     // to prevent data races while allowing mutation of specific elements,
     // elements are modified by providing an index as well as a function that
     // takes the element and returns the new value for the element.
+    assert( !m_mutex.try_lock() );
+
     auto target = node_at(index);
 
     if (target != nullptr) {
@@ -305,7 +311,6 @@ bool list<T>::empty() const {
 
 template<class T>
 void list<T>::clear() {
-    // resets list to initial state (length() == 0)
     std::unique_lock lock(m_mutex);
 
     if (m_length > 0) {
@@ -316,8 +321,12 @@ void list<T>::clear() {
         m_sentinel->prev = m_sentinel;
         m_length = 0;
     }
+
+    assert( m_sentinel->next == m_sentinel );
+    assert( m_sentinel->prev == m_sentinel );
+    assert( m_length == 0 );
 }
 
 }
 
-#endif // TS_LIST_HPP_
+#endif // LIST_HPP_

@@ -8,7 +8,7 @@
 #include <thread>
 #include <array>
 
-using dsa::ts::list;
+using dsa::list;
 
 int constexpr thread_count = 500;
 std::array<std::thread, thread_count> threads;

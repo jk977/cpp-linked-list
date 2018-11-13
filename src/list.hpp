@@ -93,11 +93,9 @@ void list<T>::modify_at(std::size_t index, list<T>::modify_fn const& f) {
     // assumes thread has exclusive ownership of list
     auto target = node_at(index);
 
-    if (target == nullptr) {
-        return;
+    if (target != nullptr) {
+        target->value = f(target->value);
     }
-
-    target->value = f(target->value);
 }
 
 template<class T>
@@ -120,7 +118,7 @@ void list<T>::modify(std::size_t index, list<T>::modify_fn const& f) {
 
 template<class T>
 void list<T>::insert_empty(T val) {
-    // insert value into an empty list, assuming thread has unique ownership of list
+    // insert value into an empty list, assuming thread has exclusive ownership of list
     auto node = new node_t(val);
 
     m_sentinel->next = node;
@@ -217,20 +215,27 @@ void list<T>::insert(T val, std::size_t index) {
 }
 
 template<class T>
+std::optional<T> list<T>::pop_at(std::size_t index) {
+    m_length = MAX(0, m_length-1);  // decrement length but prevent negative length when empty
+    return detail::pop_node(node_at(index));
+}
+
+template<class T>
 std::optional<T> list<T>::pop_front() {
-    return pop(0);
+    std::unique_lock lock(m_mutex);
+    return pop_at(0);
 }
 
 template<class T>
 std::optional<T> list<T>::pop_back() {
-    return pop(length() - 1);
+    std::unique_lock lock(m_mutex);
+    return pop_at(m_length-1);
 }
 
 template<class T>
 std::optional<T> list<T>::pop(std::size_t index) {
     std::unique_lock lock(m_mutex);
-    m_length = MAX(0, m_length-1);  // decrement length but prevent negative length when empty
-    return detail::pop_node(node_at(index));
+    return pop_at(index);
 }
 
 template<class T>
@@ -241,7 +246,7 @@ std::optional<T> list<T>::get_front() const {
 template<class T>
 std::optional<T> list<T>::get_back() const {
     std::shared_lock lock(m_mutex);
-    return get(m_length - 1);
+    return get(m_length-1);
 }
 
 template<class T>
@@ -268,7 +273,6 @@ void list<T>::clear() {
     std::unique_lock lock(m_mutex);
 
     if (m_length > 0) {
-
         m_sentinel->prev->next = nullptr; // break cycle to prevent double free
         delete m_sentinel->next;
 

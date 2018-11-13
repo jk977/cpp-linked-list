@@ -49,16 +49,16 @@ public:
     void clear();
 
 private:
-    using node_t = detail::list_node<T>;
+    using node_type = detail::list_node<T>;
 
     void insert_empty(T val);
     void insert_middle(T val, index_type index);
 
-    node_t*          node_at(index_type index) const;
+    node_type*       node_at(index_type index) const;
     std::optional<T> pop_at(index_type index);
     void             modify_at(index_type index, modify_fn const& f);
 
-    node_t* m_sentinel;
+    node_type* m_sentinel;
     std::shared_mutex mutable m_mutex;
     index_type m_length;
 };
@@ -66,7 +66,7 @@ private:
 template<class T>
 list<T>::list(): m_length(0) {
     // list is cyclical -- all nodes will always have a next and a prev
-    auto node = new node_t();
+    auto node = new node_type();
     node->next = node;
     node->prev = node;
 
@@ -85,7 +85,7 @@ void list<T>::insert_empty(T val) {
     assert( m_length == 0 );
     assert( !m_mutex.try_lock() );
 
-    auto node = new node_t(val);
+    auto node = new node_type(val);
 
     m_sentinel->next = node;
     m_sentinel->prev = node;
@@ -101,7 +101,7 @@ void list<T>::push_front(T val) {
         insert_empty(val);
     } else {
         auto old_head = m_sentinel->next;
-        auto new_head = new node_t(val);
+        auto new_head = new node_type(val);
 
         m_sentinel->next = new_head;
         new_head->prev = m_sentinel;
@@ -120,7 +120,7 @@ void list<T>::push_back(T val) {
         insert_empty(val);
     } else {
         auto old_tail = m_sentinel->prev;
-        auto new_tail = new node_t(val);
+        auto new_tail = new node_type(val);
 
         m_sentinel->prev = new_tail;
         new_tail->prev = old_tail;
@@ -136,7 +136,7 @@ void list<T>::insert_middle(T val, list<T>::index_type index) {
     // insert at a place other than the front or back
     std::unique_lock lock(m_mutex);
 
-    auto new_node = new node_t(val);
+    auto new_node = new node_type(val);
     auto target = node_at(index);
     auto prev = target->prev;
 
@@ -161,7 +161,7 @@ void list<T>::insert(T val, list<T>::index_type index) {
 }
 
 template<class T>
-typename list<T>::node_t* list<T>::node_at(list<T>::index_type index) const {
+typename list<T>::node_type* list<T>::node_at(list<T>::index_type index) const {
     assert( !m_mutex.try_lock() );
 
     auto current = m_sentinel->next;

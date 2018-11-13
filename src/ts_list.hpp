@@ -49,13 +49,12 @@ public:
 private:
     using node_t = detail::list_node<T>;
 
-    node_t* node_at(std::size_t index) const;
-
     void insert_empty(T val);
     void insert_middle(T val, std::size_t index);
 
+    node_t*          node_at(std::size_t index) const;
     std::optional<T> pop_at(std::size_t index);
-    void modify_at(std::size_t index, modify_fn const& f);
+    void             modify_at(std::size_t index, modify_fn const& f);
 
     node_t* m_sentinel;
     std::shared_mutex mutable m_mutex;
@@ -77,6 +76,160 @@ list<T>::~list() {
     clear();
     m_sentinel->next = nullptr;
     delete m_sentinel;
+}
+
+template<class T>
+void list<T>::insert_empty(T val) {
+    // insert value into an empty list, assuming thread has exclusive ownership of list
+    auto node = new node_t(val);
+
+    m_sentinel->next = node;
+    m_sentinel->prev = node;
+    node->next = m_sentinel;
+    node->prev = m_sentinel;
+}
+
+template<class T>
+void list<T>::push_front(T val) {
+    std::unique_lock lock(m_mutex);
+
+    if (m_length == 0) {
+        insert_empty(val);
+    } else {
+        auto old_head = m_sentinel->next;
+        auto new_head = new node_t(val);
+
+        m_sentinel->next = new_head;
+        new_head->prev = m_sentinel;
+        new_head->next = old_head;
+        old_head->prev = new_head;
+    }
+
+    ++m_length;
+}
+
+template<class T>
+void list<T>::push_back(T val) {
+    std::unique_lock lock(m_mutex);
+
+    if (m_length == 0) {
+        insert_empty(val);
+    } else {
+        auto old_tail = m_sentinel->prev;
+        auto new_tail = new node_t(val);
+
+        m_sentinel->prev = new_tail;
+        new_tail->prev = old_tail;
+        new_tail->next = m_sentinel;
+        old_tail->next = new_tail;
+    }
+
+    ++m_length;
+}
+
+template<class T>
+void list<T>::insert_middle(T val, std::size_t index) {
+    // insert at a place other than the front or back
+    std::unique_lock lock(m_mutex);
+
+    auto new_node = new node_t(val);
+    auto target = node_at(index);
+    auto prev = target->prev;
+
+    prev->next = new_node;
+    new_node->prev = prev;
+
+    new_node->next = target;
+    target->prev = new_node;
+
+    ++m_length;
+}
+
+template<class T>
+void list<T>::insert(T val, std::size_t index) {
+    if (index == 0) {
+        push_front(val);
+    } else if (index == length()) {
+        push_back(val);
+    } else {
+        insert_middle(val, index);
+    }
+}
+
+template<class T>
+typename list<T>::node_t* list<T>::node_at(std::size_t index) const {
+    // gets node at specified index, assuming thread has ownership of list.
+    auto current = m_sentinel->next;
+    std::size_t i = 0;
+
+    // stop at sentinel to prevent wrapping around to the beginning
+    // when index > length()
+    while (current != m_sentinel && i < index) {
+        current = current->next;
+        ++i;
+    }
+
+    // return nullptr instead of sentinel if index was out of bounds
+    return (current != m_sentinel) ?
+        current :
+        nullptr;
+}
+
+template<class T>
+std::optional<T> list<T>::pop_at(std::size_t index) {
+    // assumes thread has exclusive ownership of list and m_length > 0
+    --m_length;
+    return detail::pop_node(node_at(index));
+}
+
+template<class T>
+std::optional<T> list<T>::pop_front() {
+    std::unique_lock lock(m_mutex);
+
+    if (m_length == 0) {
+        return std::nullopt;
+    }
+
+    return pop_at(0);
+}
+
+template<class T>
+std::optional<T> list<T>::pop_back() {
+    std::unique_lock lock(m_mutex);
+
+    if (m_length == 0) {
+        return std::nullopt;
+    }
+
+    return pop_at(m_length-1);
+}
+
+template<class T>
+std::optional<T> list<T>::pop(std::size_t index) {
+    std::unique_lock lock(m_mutex);
+
+    if (m_length == 0) {
+        return std::nullopt;
+    }
+
+    return pop_at(index);
+}
+
+template<class T>
+std::optional<T> list<T>::get_front() const {
+    return get(0);
+}
+
+template<class T>
+std::optional<T> list<T>::get_back() const {
+    std::shared_lock lock(m_mutex);
+    return get(m_length-1);
+}
+
+template<class T>
+std::optional<T> list<T>::get(std::size_t index) const {
+    std::shared_lock lock(m_mutex);
+    return detail::value_of(node_at(index));
 }
 
 template<class T>
@@ -135,160 +288,6 @@ void list<T>::modify(std::size_t index, list<T>::modify_fn const& f) {
     }
 
     modify_at(index, f);
-}
-
-template<class T>
-void list<T>::insert_empty(T val) {
-    // insert value into an empty list, assuming thread has exclusive ownership of list
-    auto node = new node_t(val);
-
-    m_sentinel->next = node;
-    m_sentinel->prev = node;
-    node->next = m_sentinel;
-    node->prev = m_sentinel;
-}
-
-template<class T>
-void list<T>::push_front(T val) {
-    std::unique_lock lock(m_mutex);
-
-    if (m_length == 0) {
-        insert_empty(val);
-    } else {
-        auto old_head = m_sentinel->next;
-        auto new_head = new node_t(val);
-
-        m_sentinel->next = new_head;
-        new_head->prev = m_sentinel;
-        new_head->next = old_head;
-        old_head->prev = new_head;
-    }
-
-    ++m_length;
-}
-
-template<class T>
-void list<T>::push_back(T val) {
-    std::unique_lock lock(m_mutex);
-
-    if (m_length == 0) {
-        insert_empty(val);
-    } else {
-        auto old_tail = m_sentinel->prev;
-        auto new_tail = new node_t(val);
-
-        m_sentinel->prev = new_tail;
-        new_tail->prev = old_tail;
-        new_tail->next = m_sentinel;
-        old_tail->next = new_tail;
-    }
-
-    ++m_length;
-}
-
-template<class T>
-typename list<T>::node_t* list<T>::node_at(std::size_t index) const {
-    // gets node at specified index, assuming thread has ownership of list.
-    auto current = m_sentinel->next;
-    std::size_t i = 0;
-
-    // stop at sentinel to prevent wrapping around to the beginning
-    // when index > length()
-    while (current != m_sentinel && i < index) {
-        current = current->next;
-        ++i;
-    }
-
-    // return nullptr instead of sentinel if index was out of bounds
-    return (current != m_sentinel) ?
-        current :
-        nullptr;
-}
-
-template<class T>
-void list<T>::insert_middle(T val, std::size_t index) {
-    // insert at a place other than the front or back
-    std::unique_lock lock(m_mutex);
-
-    auto new_node = new node_t(val);
-    auto target = node_at(index);
-    auto prev = target->prev;
-
-    prev->next = new_node;
-    new_node->prev = prev;
-
-    new_node->next = target;
-    target->prev = new_node;
-
-    ++m_length;
-}
-
-template<class T>
-void list<T>::insert(T val, std::size_t index) {
-    if (index == 0) {
-        push_front(val);
-    } else if (index == length()) {
-        push_back(val);
-    } else {
-        insert_middle(val, index);
-    }
-}
-
-template<class T>
-std::optional<T> list<T>::pop_at(std::size_t index) {
-    // assumes thread has exclusive ownership of list and m_length > 0
-    --m_length;
-    return detail::pop_node(node_at(index));
-}
-
-template<class T>
-std::optional<T> list<T>::pop_front() {
-    std::unique_lock lock(m_mutex);
-
-    if (m_length == 0) {
-        return std::nullopt;
-    }
-
-    return pop_at(0);
-}
-
-template<class T>
-std::optional<T> list<T>::pop_back() {
-    std::unique_lock lock(m_mutex);
-
-    if (m_length == 0) {
-        return std::nullopt;
-    }
-
-    return pop_at(m_length-1);
-}
-
-template<class T>
-std::optional<T> list<T>::pop(std::size_t index) {
-    std::unique_lock lock(m_mutex);
-
-    if (m_length == 0) {
-        return std::nullopt;
-    }
-
-    return pop_at(index);
-}
-
-template<class T>
-std::optional<T> list<T>::get_front() const {
-    return get(0);
-}
-
-template<class T>
-std::optional<T> list<T>::get_back() const {
-    std::shared_lock lock(m_mutex);
-    return get(m_length-1);
-}
-
-template<class T>
-std::optional<T> list<T>::get(std::size_t index) const {
-    std::shared_lock lock(m_mutex);
-    return detail::value_of(node_at(index));
 }
 
 template<class T>

@@ -1,7 +1,7 @@
 #define BOOST_TEST_MODULE List Test
 #include <boost/test/included/unit_test.hpp>
 
-#include "../src/ts_list.hpp"
+#include "../src/list.hpp"
 
 #include <iostream>
 #include <functional>

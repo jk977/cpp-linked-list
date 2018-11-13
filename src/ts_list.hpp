@@ -55,7 +55,6 @@ private:
     void insert_middle(T val, std::size_t index);
 
     std::optional<T> pop_at(std::size_t index);
-
     void modify_at(std::size_t index, modify_fn const& f);
 
     node_t* m_sentinel;
@@ -94,7 +93,10 @@ void list<T>::map(list<T>::modify_fn const& f) {
 
 template<class T>
 void list<T>::modify_at(std::size_t index, list<T>::modify_fn const& f) {
-    // assumes thread has exclusive ownership of list
+    // assumes thread has exclusive ownership of list.
+    // to prevent data races while allowing mutation of specific elements,
+    // elements are modified by providing an index as well as a function that
+    // takes the element and returns the new value for the element.
     auto target = node_at(index);
 
     if (target != nullptr) {
@@ -105,18 +107,33 @@ void list<T>::modify_at(std::size_t index, list<T>::modify_fn const& f) {
 template<class T>
 void list<T>::modify_front(list<T>::modify_fn const& f) {
     std::unique_lock lock(m_mutex);
+
+    if (m_length == 0) {
+        return;
+    }
+
     modify_at(0, f);
 }
 
 template<class T>
 void list<T>::modify_back(list<T>::modify_fn const& f) {
     std::unique_lock lock(m_mutex);
+
+    if (m_length == 0) {
+        return;
+    }
+
     modify_at(m_length-1, f);
 }
 
 template<class T>
 void list<T>::modify(std::size_t index, list<T>::modify_fn const& f) {
     std::unique_lock lock(m_mutex);
+
+    if (m_length == 0) {
+        return;
+    }
+
     modify_at(index, f);
 }
 
@@ -172,7 +189,6 @@ void list<T>::push_back(T val) {
 template<class T>
 typename list<T>::node_t* list<T>::node_at(std::size_t index) const {
     // gets node at specified index, assuming thread has ownership of list.
-    // function is not thread-safe otherwise
     auto current = m_sentinel->next;
     std::size_t i = 0;
 

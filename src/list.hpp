@@ -5,7 +5,7 @@
 #ifndef LIST_HPP_
 #define LIST_HPP_
 
-#include <cstddef>
+#include <cstdint>
 #include <cassert>
 #include <optional>
 #include <functional>
@@ -24,27 +24,27 @@ public:
     ~list();
 
     using modify_fn = std::function<T(T const&)>;
-    using access_type = std::optional<T>;
+    using index_type = std::int64_t;
 
     void push_front(T val);
     void push_back(T val);
-    void insert(T val, std::size_t index);
+    void insert(T val, index_type index);
 
-    access_type pop_front();
-    access_type pop_back();
-    access_type pop(std::size_t index);
+    std::optional<T> pop_front();
+    std::optional<T> pop_back();
+    std::optional<T> pop(index_type index);
 
-    access_type get_front() const;
-    access_type get_back() const;
-    access_type get(std::size_t index) const;
+    std::optional<T> get_front() const;
+    std::optional<T> get_back() const;
+    std::optional<T> get(index_type index) const;
 
     void map(modify_fn const& f);
 
     void modify_front(modify_fn const& f);
     void modify_back(modify_fn const& f);
-    void modify(std::size_t index, modify_fn const& f);
+    void modify(index_type index, modify_fn const& f);
 
-    std::size_t length() const;
+    index_type length() const;
     bool empty() const;
     void clear();
 
@@ -52,15 +52,15 @@ private:
     using node_t = detail::list_node<T>;
 
     void insert_empty(T val);
-    void insert_middle(T val, std::size_t index);
+    void insert_middle(T val, index_type index);
 
-    node_t*     node_at(std::size_t index) const;
-    access_type pop_at(std::size_t index);
-    void        modify_at(std::size_t index, modify_fn const& f);
+    node_t*          node_at(index_type index) const;
+    std::optional<T> pop_at(index_type index);
+    void             modify_at(index_type index, modify_fn const& f);
 
     node_t* m_sentinel;
     std::shared_mutex mutable m_mutex;
-    std::size_t m_length;
+    index_type m_length;
 };
 
 template<class T>
@@ -132,7 +132,7 @@ void list<T>::push_back(T val) {
 }
 
 template<class T>
-void list<T>::insert_middle(T val, std::size_t index) {
+void list<T>::insert_middle(T val, list<T>::index_type index) {
     // insert at a place other than the front or back
     std::unique_lock lock(m_mutex);
 
@@ -150,7 +150,7 @@ void list<T>::insert_middle(T val, std::size_t index) {
 }
 
 template<class T>
-void list<T>::insert(T val, std::size_t index) {
+void list<T>::insert(T val, list<T>::index_type index) {
     if (index == 0) {
         push_front(val);
     } else if (index == length()) {
@@ -161,11 +161,11 @@ void list<T>::insert(T val, std::size_t index) {
 }
 
 template<class T>
-typename list<T>::node_t* list<T>::node_at(std::size_t index) const {
+typename list<T>::node_t* list<T>::node_at(list<T>::index_type index) const {
     assert( !m_mutex.try_lock() );
 
     auto current = m_sentinel->next;
-    std::size_t i = 0;
+    index_type i = 0;
 
     // stop at sentinel to prevent wrapping around to the beginning
     // when index > length()
@@ -181,64 +181,47 @@ typename list<T>::node_t* list<T>::node_at(std::size_t index) const {
 }
 
 template<class T>
-typename list<T>::access_type list<T>::pop_at(std::size_t index) {
+std::optional<T> list<T>::pop_at(list<T>::index_type index) {
     assert( !m_mutex.try_lock() );
 
-    --m_length;
+    if (m_length > 0) {
+        --m_length;
+    }
+
     return detail::pop_node(node_at(index));
 }
 
 template<class T>
-typename list<T>::access_type list<T>::pop_front() {
+std::optional<T> list<T>::pop_front() {
     std::unique_lock lock(m_mutex);
-
-    if (m_length == 0) {
-        return std::nullopt;
-    }
-
     return pop_at(0);
 }
 
 template<class T>
-typename list<T>::access_type list<T>::pop_back() {
+std::optional<T> list<T>::pop_back() {
     std::unique_lock lock(m_mutex);
-
-    if (m_length == 0) {
-        return std::nullopt;
-    }
-
     return pop_at(m_length-1);
 }
 
 template<class T>
-typename list<T>::access_type list<T>::pop(std::size_t index) {
+std::optional<T> list<T>::pop(list<T>::index_type index) {
     std::unique_lock lock(m_mutex);
-
-    if (m_length == 0) {
-        return std::nullopt;
-    }
-
     return pop_at(index);
 }
 
 template<class T>
-typename list<T>::access_type list<T>::get_front() const {
+std::optional<T> list<T>::get_front() const {
     return get(0);
 }
 
 template<class T>
-typename list<T>::access_type list<T>::get_back() const {
+std::optional<T> list<T>::get_back() const {
     std::shared_lock lock(m_mutex);
-
-    if (m_length == 0) {
-        return std::nullopt;
-    }
-
     return get(m_length-1);
 }
 
 template<class T>
-typename list<T>::access_type list<T>::get(std::size_t index) const {
+std::optional<T> list<T>::get(list<T>::index_type index) const {
     std::shared_lock lock(m_mutex);
     return detail::value_of(node_at(index));
 }
@@ -256,7 +239,7 @@ void list<T>::map(list<T>::modify_fn const& f) {
 }
 
 template<class T>
-void list<T>::modify_at(std::size_t index, list<T>::modify_fn const& f) {
+void list<T>::modify_at(list<T>::index_type index, list<T>::modify_fn const& f) {
     // to prevent data races while allowing mutation of specific elements,
     // elements are modified by providing an index as well as a function that
     // takes the element and returns the new value for the element.
@@ -283,27 +266,17 @@ void list<T>::modify_front(list<T>::modify_fn const& f) {
 template<class T>
 void list<T>::modify_back(list<T>::modify_fn const& f) {
     std::unique_lock lock(m_mutex);
-
-    if (m_length == 0) {
-        return;
-    }
-
     modify_at(m_length-1, f);
 }
 
 template<class T>
-void list<T>::modify(std::size_t index, list<T>::modify_fn const& f) {
+void list<T>::modify(list<T>::index_type index, list<T>::modify_fn const& f) {
     std::unique_lock lock(m_mutex);
-
-    if (m_length == 0) {
-        return;
-    }
-
     modify_at(index, f);
 }
 
 template<class T>
-std::size_t list<T>::length() const {
+typename list<T>::index_type list<T>::length() const {
     std::shared_lock lock(m_mutex);
     return m_length;
 }

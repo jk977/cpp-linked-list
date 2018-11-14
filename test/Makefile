@@ -1,7 +1,12 @@
 BOOST_PATH ?= /usr/local/boost_1_68_0
+PROFILE ?= 0
 
 CXX ?= g++
-CXXFLAGS ?= -g -pg -pthread -std=c++17 -I$(BOOST_PATH) -O0 -Wall -Wextra -pedantic -Werror
+CXXFLAGS ?= -g -pthread -std=c++17 -I$(BOOST_PATH) -O0 -Wall -Wextra -pedantic -Werror
+
+ifneq ($(PROFILE), 0)
+	CXXFLAGS += -pg
+endif
 
 .PHONY: all bin debug clean run
 

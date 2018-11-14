@@ -36,21 +36,21 @@ BOOST_AUTO_TEST_CASE(push) {
 BOOST_AUTO_TEST_CASE(insert) {
     list<int> l;
 
-    for (int i = 0; i < 10; i++) {
-        l.push_front(i);
-    }
+    l.insert(0, -1);
+    BOOST_TEST( l.empty() );
 
     l.insert(10, 0);
     BOOST_TEST( *l.get(0) == 10 );
 
-    l.insert(11, l.length());
+    l.insert(11, 1);
     BOOST_TEST( *l.get_back() == 11 );
 
-    l.insert(3, 3);
-    BOOST_TEST( *l.get(3) == 3 );
+    l.insert(3, 2);
+    BOOST_TEST( *l.get(2) == 3 );
 
-    l.insert(6, 8);
-    BOOST_TEST( *l.get(8) == 6 );
+    l.insert(6, 2);
+    BOOST_TEST( *l.get(2) == 6 );
+    BOOST_TEST( *l.get(3) == 3 );
 }
 
 BOOST_AUTO_TEST_CASE(pop) {

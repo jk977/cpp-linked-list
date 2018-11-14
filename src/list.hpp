@@ -164,12 +164,16 @@ template<class T>
 typename list<T>::node_type* list<T>::node_at(list<T>::index_type index) const {
     assert( !m_mutex.try_lock() );
 
+    if (index < 0 || index >= m_length) {
+        return nullptr;
+    }
+
     auto current = m_sentinel->next;
     index_type i = 0;
 
-    // stop at sentinel to prevent wrapping around to the beginning
-    // when index > length()
-    while (current != m_sentinel && i < index) {
+    // index is guaranteed to be in range, so don't care about
+    // checking if current is m_sentinel
+    while (i < index) {
         current = current->next;
         ++i;
     }

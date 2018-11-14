@@ -97,7 +97,6 @@ BOOST_AUTO_TEST_CASE(get) {
     for (int i = 0; i < 100; i++) {
         l.push_back(i);
         BOOST_TEST( *l.get(i) == i );
-        BOOST_TEST( *l.get(i) == i );
     }
 
     BOOST_TEST( *l.get_front() == 0 );

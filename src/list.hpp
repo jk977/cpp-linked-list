@@ -136,9 +136,9 @@ void list<T>::insert_middle(T val, list<T>::index_type index) {
     // insert at a place other than the front or back
     std::unique_lock lock(m_mutex);
 
-    auto new_node = new node_type(val);
     auto target = node_at(index);
     auto prev = target->prev;
+    auto new_node = new node_type(val);
 
     prev->next = new_node;
     new_node->prev = prev;
@@ -155,7 +155,7 @@ void list<T>::insert(T val, list<T>::index_type index) {
         push_front(val);
     } else if (index == length()) {
         push_back(val);
-    } else {
+    } else if (index > 0 && index < length()) {
         insert_middle(val, index);
     }
 }
@@ -178,21 +178,20 @@ typename list<T>::node_type* list<T>::node_at(list<T>::index_type index) const {
         ++i;
     }
 
-    // return nullptr instead of sentinel if index was out of bounds
-    return (current != m_sentinel) ?
-        current :
-        nullptr;
+    return current;
 }
 
 template<class T>
 std::optional<T> list<T>::pop_at(list<T>::index_type index) {
     assert( !m_mutex.try_lock() );
 
+    auto result = detail::pop_node(node_at(index));
+
     if (m_length > 0) {
         --m_length;
     }
 
-    return detail::pop_node(node_at(index));
+    return result;
 }
 
 template<class T>
@@ -259,11 +258,6 @@ void list<T>::modify_at(list<T>::index_type index, list<T>::modify_fn const& f) 
 template<class T>
 void list<T>::modify_front(list<T>::modify_fn const& f) {
     std::unique_lock lock(m_mutex);
-
-    if (m_length == 0) {
-        return;
-    }
-
     modify_at(0, f);
 }
 

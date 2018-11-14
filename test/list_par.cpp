@@ -78,13 +78,6 @@ BOOST_AUTO_TEST_CASE(pop) {
 BOOST_AUTO_TEST_CASE(map) {
     list<int> l;
     bool has_run = false;
-    auto runner = [&has_run](auto n) {
-        has_run = true; // shouldn't run on an empty list
-        return n;
-    };
-
-    l.map(runner);
-    BOOST_TEST(!has_run);
 
     for (int i = 0; i < 100; i++) {
         l.push_back(i);

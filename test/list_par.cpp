@@ -4,16 +4,14 @@
 #include "../src/list.hpp"
 
 #include <thread>
-#include <array>
 #include <vector>
 
 using dsa::list;
 
-int constexpr thread_count = 100;
-std::array<std::thread, thread_count> threads;
-
 template<class Fn, class... T>
-void execute_parallel(Fn f, T... args) {
+void execute_n_times(int n, Fn f, T... args) {
+    std::vector<std::thread> threads(n);
+
     for (auto& t : threads) {
         t = std::thread(f, args...);
     }
@@ -33,8 +31,9 @@ BOOST_AUTO_TEST_CASE(push) {
         }
     };
 
-    execute_parallel(push, std::ref(l));
-    BOOST_TEST( l.length() == thread_count * fill_size );
+    int constexpr times = 100;
+    execute_n_times(times, push, std::ref(l));
+    BOOST_TEST( l.length() == times * fill_size );
 
     std::vector<int> clone(l.length());
 
@@ -78,10 +77,11 @@ BOOST_AUTO_TEST_CASE(map) {
         l.map( [x](auto& n) { return n+x; } );
     };
 
-    execute_parallel(add_all, 1);
+    int constexpr times = 100;
+    execute_n_times(times, add_all, 1);
 
     for (int i = 0; i < l.length(); i++) {
-        BOOST_TEST( *l.get(i) == (thread_count + i) );
+        BOOST_TEST( *l.get(i) == (times + i) );
     }
 }
 
@@ -100,9 +100,10 @@ BOOST_AUTO_TEST_CASE(modify) {
         }
     };
 
-    execute_parallel(inc_all, std::ref(l));
+    int constexpr times = 100;
+    execute_n_times(times, inc_all, std::ref(l));
 
     for (int i = 0; i < l.length(); i++) {
-        BOOST_TEST( *l.get(i) == (thread_count + i) );
+        BOOST_TEST( *l.get(i) == (times + i) );
     }
 }

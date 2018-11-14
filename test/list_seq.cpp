@@ -2,16 +2,9 @@
 #include <boost/test/included/unit_test.hpp>
 
 #include "../src/list.hpp"
-
-#include <iostream>
 #include <functional>
-#include <thread>
-#include <array>
 
 using dsa::list;
-
-int constexpr thread_count = 500;
-std::array<std::thread, thread_count> threads;
 
 BOOST_AUTO_TEST_CASE(push) {
     list<int> l;
@@ -119,20 +112,10 @@ BOOST_AUTO_TEST_CASE(map) {
         l.push_back(i);
     }
 
-    auto add_all = [&l](int x) {
-        l.map( [x](auto& n) { return n+x; } );
-    };
-
-    for (int i = 0; i < thread_count; i++) {
-        threads[i] = std::thread(add_all, 1);
-    }
-
-    for (int i = 0; i < thread_count; i++) {
-        threads[i].join();
-    }
+    l.map( [](auto n) { return n+1; } );
 
     for (int i = 0; i < (int) l.length(); i++) {
-        BOOST_TEST( *l.get(i) == (thread_count + i) );
+        BOOST_TEST( *l.get(i) == (i+1) );
     }
 }
 
@@ -215,32 +198,4 @@ BOOST_AUTO_TEST_CASE(clear) {
     l.clear();
     BOOST_TEST( length(l) == 0 );
     BOOST_TEST(l.empty());
-}
-
-BOOST_AUTO_TEST_CASE(threaded_write) {
-    list<int> l;
-
-    for (int i = 0; i < 100; i++) {
-        l.push_back(i);
-    }
-
-    auto inc_all = [](list<int>& l) {
-        for (unsigned int i = 0; i < l.length(); i++) {
-            l.modify(i, [](auto n) {
-                return n+1;
-            });
-        }
-    };
-
-    for (int i = 0; i < thread_count; i++) {
-        threads[i] = std::thread(inc_all, std::ref(l));
-    }
-
-    for (int i = 0; i < thread_count; i++) {
-        threads[i].join();
-    }
-
-    for (int i = 0; i < (int) l.length(); i++) {
-        BOOST_TEST( *l.get(i) == (thread_count + i) );
-    }
 }

@@ -18,7 +18,7 @@ BOOST_AUTO_TEST_CASE(push) {
     l.push_front(3);
     BOOST_TEST( *l.get_front() == 3 );
 
-    std::size_t length = l.length();
+    auto length = l.length();
 
     for (int i = 0; i < 100; i++) {
         l.push_back(i);
@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(pop) {
     BOOST_TEST( *l.pop(2) == 2 );
     BOOST_TEST( *l.pop_front() == 0 );
     BOOST_TEST( *l.pop_back() == 4 );
-    BOOST_TEST( (int) l.length() == 2 );
+    BOOST_TEST( l.length() == 2 );
 }
 
 BOOST_AUTO_TEST_CASE(get) {
@@ -154,7 +154,6 @@ BOOST_AUTO_TEST_CASE(modify) {
 
 BOOST_AUTO_TEST_CASE(length) {
     list<int> l;
-
     BOOST_TEST( l.length() == 0 );
 
     for (unsigned int i = 1; i <= 100; i++) {
@@ -177,25 +176,21 @@ BOOST_AUTO_TEST_CASE(empty) {
 
 BOOST_AUTO_TEST_CASE(clear) {
     list<int> l;
-
-    // to satisfy the compiler with signed/unsigned comparisons
-    auto length = [](auto& l) { return (int) l.length(); };
-
-    BOOST_TEST( length(l) == 0 );
+    BOOST_TEST( l.length() == 0 );
 
     l.clear();
-    BOOST_TEST( length(l) == 0 );
+    BOOST_TEST( l.length() == 0 );
 
     l.push_back(0);
-    BOOST_TEST( length(l) == 1 );
+    BOOST_TEST( l.length() == 1 );
 
     for (int i = 0; i < 100; i++) {
         l.push_back(i);
     }
 
-    BOOST_TEST( length(l) == 101 );
+    BOOST_TEST( l.length() == 101 );
 
     l.clear();
-    BOOST_TEST( length(l) == 0 );
+    BOOST_TEST( l.length() == 0 );
     BOOST_TEST(l.empty());
 }

@@ -42,8 +42,6 @@ BOOST_AUTO_TEST_CASE(push) {
         clone[i] = *l.get(i);
     }
 
-    std::sort(clone.begin(), clone.end());
-
     std::array<int, fill_size> count;
     count.fill(0);
 
@@ -53,7 +51,7 @@ BOOST_AUTO_TEST_CASE(push) {
     }
 
     // check if all counts are equal
-    for (auto& n : count) {
+    for (auto n : count) {
         BOOST_TEST( count[0] == n );
     }
 
@@ -82,7 +80,7 @@ BOOST_AUTO_TEST_CASE(map) {
 
     execute_parallel(add_all, 1);
 
-    for (int i = 0; i < (int) l.length(); i++) {
+    for (int i = 0; i < l.length(); i++) {
         BOOST_TEST( *l.get(i) == (thread_count + i) );
     }
 }
@@ -95,7 +93,7 @@ BOOST_AUTO_TEST_CASE(modify) {
     }
 
     auto inc_all = [](list<int>& l) {
-        for (unsigned int i = 0; i < l.length(); i++) {
+        for (int i = 0; i < l.length(); i++) {
             l.modify(i, [](auto n) {
                 return n+1;
             });
@@ -104,7 +102,7 @@ BOOST_AUTO_TEST_CASE(modify) {
 
     execute_parallel(inc_all, std::ref(l));
 
-    for (int i = 0; i < (int) l.length(); i++) {
+    for (int i = 0; i < l.length(); i++) {
         BOOST_TEST( *l.get(i) == (thread_count + i) );
     }
 }

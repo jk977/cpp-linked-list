@@ -58,6 +58,23 @@ BOOST_AUTO_TEST_CASE(push) {
     BOOST_TEST( count[0] * (int) count.size() == l.length() );
 }
 
+BOOST_AUTO_TEST_CASE(pop) {
+    list<int> l;
+    int constexpr length = 10;
+    auto popper = [](list<int>& l) {
+        BOOST_TEST( l.pop_back().has_value() );
+    };
+
+    for (int i = 0; i < length; i++) {
+        l.push_back(i);
+    }
+
+    BOOST_TEST( l.length() == length );
+
+    execute_n_times(length, popper, std::ref(l));
+    BOOST_TEST(l.empty());
+}
+
 BOOST_AUTO_TEST_CASE(map) {
     list<int> l;
     bool has_run = false;
@@ -74,7 +91,7 @@ BOOST_AUTO_TEST_CASE(map) {
     }
 
     auto add_all = [&l](int x) {
-        l.map( [x](auto& n) { return n+x; } );
+        l.map( [x](auto n) { return n+x; } );
     };
 
     int constexpr times = 100;

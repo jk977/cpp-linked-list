@@ -9,8 +9,6 @@
 #include "list_node.hpp"
 #include "list_iterator.hpp"
 
-#define MAX(x,y) ((x > y) ? x : y)
-
 namespace dsa {
 
 template<class T>

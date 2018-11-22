@@ -74,6 +74,7 @@ list<T>::list(): m_length(0) {
 template<class T>
 list<T>::~list() {
     clear();
+    m_sentinel->next = nullptr;
     delete m_sentinel;
 }
 

@@ -206,7 +206,10 @@ std::optional<T> list<T>::pop_back() {
 
 template<class T>
 std::optional<T> list<T>::pop(std::size_t index) {
-    m_length = MAX(0, m_length-1);  // decrement length but prevent negative length when empty
+    if (m_length != 0) {
+        m_length--;
+    }
+
     return detail::pop_node(node_at(index));
 }
 
@@ -243,8 +246,8 @@ void list<T>::clear() {
         m_sentinel->prev->next = nullptr; // break cycle to prevent double free
         delete m_sentinel->next;
 
-        m_sentinel->next = nullptr;
-        m_sentinel->prev = nullptr;
+        m_sentinel->next = m_sentinel;
+        m_sentinel->prev = m_sentinel;
         m_length = 0;
     }
 }

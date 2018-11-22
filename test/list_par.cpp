@@ -77,7 +77,6 @@ BOOST_AUTO_TEST_CASE(pop) {
 
 BOOST_AUTO_TEST_CASE(map) {
     list<int> l;
-    bool has_run = false;
 
     for (int i = 0; i < 100; i++) {
         l.push_back(i);
